@@ -1,4 +1,4 @@
-import { ThemedText } from "@/components/themed-text";
+import { ThemedText } from "@/components/themed-text.component";
 import React from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 

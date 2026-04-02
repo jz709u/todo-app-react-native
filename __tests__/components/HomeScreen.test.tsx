@@ -33,7 +33,7 @@ describe("HomeScreen Integration", () => {
     } as any);
 
     // Import after mock setup
-    const HomeScreen = require("@/app/(tabs)/home.view").default;
+    const HomeScreen = require("@/app/(tabs)/home_Screen").default;
     expect(HomeScreen).toBeDefined();
   });
 
