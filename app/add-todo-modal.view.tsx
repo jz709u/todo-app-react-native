@@ -1,5 +1,5 @@
-import { DueDatePicker } from "@/components/due-date-picker";
-import { ThemedText } from "@/components/themed-text";
+import { DueDatePicker } from "@/components/due-date-picker.component";
+import { ThemedText } from "@/components/themed-text.component";
 import { useTodoStore } from "@/store/todoStore";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";

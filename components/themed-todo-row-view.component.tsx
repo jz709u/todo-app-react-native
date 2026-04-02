@@ -3,8 +3,8 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { SFSymbol, SymbolView } from "expo-symbols";
-import { ThemedText } from "./themed-text";
-import { ThemedViewProps } from "./themed-view";
+import { ThemedText } from "./themed-text.component";
+import { ThemedViewProps } from "./themed-view.component";
 
 export type ThemedTodoRowViewProps = ThemedViewProps & {
   text: string;

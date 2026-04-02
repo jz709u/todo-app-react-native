@@ -8,7 +8,7 @@ jest.mock("expo-symbols", () => ({
 
 import React from "react";
 import { render } from "@testing-library/react-native";
-import { ThemedTodoRowView } from "@/components/themed-todo-row-view";
+import { ThemedTodoRowView } from "@/components/themed-todo-row-view.component";
 
 describe("ThemedTodoRowView Snapshots", () => {
   it("should render incomplete todo correctly", () => {

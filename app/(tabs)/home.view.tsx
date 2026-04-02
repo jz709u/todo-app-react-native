@@ -1,5 +1,5 @@
-import { ThemedText } from "@/components/themed-text";
-import { ThemedTodoRowView } from "@/components/themed-todo-row-view";
+import { ThemedText } from "@/components/themed-text.component";
+import { ThemedTodoRowView } from "@/components/themed-todo-row-view.component";
 import { useTodoStore } from "@/store/todoStore";
 import React, { useEffect } from "react";
 import { FlatList, StyleSheet, View } from "react-native";

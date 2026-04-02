@@ -2,7 +2,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import React, { useState } from "react";
 
 import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
-import { ThemedText } from "./themed-text";
+import { ThemedText } from "./themed-text.component";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 export type DueDatePickerProps = {

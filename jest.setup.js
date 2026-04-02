@@ -30,11 +30,11 @@ const mockAsyncStorage = {
 jest.mock("@react-native-async-storage/async-storage", () => mockAsyncStorage);
 
 // Mock components
-jest.mock("@/components/themed-text", () => ({
+jest.mock("@/components/themed-text.component", () => ({
   ThemedText: ({ children, ...props }) => children,
 }));
 
-jest.mock("@/components/themed-todo-row-view", () => ({
+jest.mock("@/components/themed-todo-row-view.component", () => ({
   ThemedTodoRowView: ({ text }) => text,
 }));
 

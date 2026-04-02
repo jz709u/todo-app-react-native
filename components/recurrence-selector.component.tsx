@@ -1,7 +1,7 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
 import React from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
-import { ThemedText } from "./themed-text";
+import { ThemedText } from "./themed-text.component";
 
 export type RecurrenceType = "daily" | "weekly" | "monthly" | null;
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { ThemedText } from "./themed-text";
+import { ThemedText } from "./themed-text.component";
 
 export type PrioritySelectorProps = {
   value: "low" | "medium" | "high";

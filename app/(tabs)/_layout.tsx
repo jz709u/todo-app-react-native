@@ -2,8 +2,8 @@ import { Tabs, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { HapticTab } from "@/components/haptic-tab.component";
+import { IconSymbol } from "@/components/ui/icon-symbol.component";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
@@ -52,7 +52,7 @@ export default function TabLayout() {
       {/* Floating Action Button */}
       <Pressable
         style={styles.fab}
-        onPress={() => router.push("/add-todo-modal")}
+        onPress={() => router.push("/add-todo-modal.view")}
       >
         <IconSymbol size={28} name="plus.circle.fill" color="#fff" />
       </Pressable>
