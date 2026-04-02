@@ -78,6 +78,11 @@ export default function CalendarScreen() {
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
 
+  // Pad to complete the 6-week grid (42 days total)
+  while (days.length < 42) {
+    days.push(null);
+  }
+
   const selectedDateTodos = getSelectedDateTodos();
   const isToday =
     selectedDate === new Date().getDate() &&
