@@ -10,11 +10,11 @@ export type ThemedTodoRowViewProps = ThemedViewProps & {
   text: string;
   isCompleted: boolean;
   toggleCompleted: () => void;
-  priority?: 'low' | 'medium' | 'high';
+  priority?: "low" | "medium" | "high";
   dueDate?: number;
 };
 
-const PRIORITY_COLORS: Record<'low' | 'medium' | 'high', string> = {
+const PRIORITY_COLORS: Record<"low" | "medium" | "high", string> = {
   low: "#FFD700",
   medium: "#FFA500",
   high: "#FF6B6B",
@@ -27,7 +27,7 @@ export function ThemedTodoRowView({
   text,
   isCompleted,
   toggleCompleted,
-  priority = 'medium',
+  priority = "medium",
   dueDate,
   ...otherProps
 }: ThemedTodoRowViewProps) {
@@ -85,13 +85,13 @@ export function ThemedTodoRowView({
             <ThemedText
               style={[
                 themedRowStyles.dueDate,
-                isOverdue && themedRowStyles.overdueText,
+                isOverdue ? themedRowStyles.overdueText : {},
               ]}
             >
               📅 {formatDueDate(dueDate)}
             </ThemedText>
           )}
-          {priority && priority !== 'medium' && (
+          {priority && priority !== "medium" && (
             <View
               style={[
                 themedRowStyles.priorityBadge,
@@ -128,12 +128,7 @@ function CheckmarkButtonView({
     tintColor = "#3C88DF";
   }
   const symbolView = (
-    <SymbolView
-      type={type}
-      name={name}
-      size={size}
-      tintColor={tintColor}
-    />
+    <SymbolView type={type} name={name} size={size} tintColor={tintColor} />
   );
 
   return (
@@ -200,4 +195,3 @@ const themedRowStyles = StyleSheet.create({
     color: "#fff",
   },
 });
-

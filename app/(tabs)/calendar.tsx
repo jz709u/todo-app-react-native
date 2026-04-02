@@ -145,7 +145,6 @@ export default function CalendarScreen() {
             <FlatList
               data={selectedDateTodos}
               renderItem={({ item: todo, index: todoIndex }) => {
-                const todoIndex = todos.indexOf(todo);
                 return (
                   <ThemedTodoRowView
                     text={todo.text}

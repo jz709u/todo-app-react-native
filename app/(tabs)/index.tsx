@@ -1,7 +1,6 @@
+import { DueDatePicker } from "@/components/due-date-picker";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedTodoRowView } from "@/components/themed-todo-row-view";
-import { DueDatePicker } from "@/components/due-date-picker";
-import { PrioritySelector } from "@/components/priority-selector";
 import { useTodoStore } from "@/store/todoStore";
 import React, { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
@@ -21,7 +20,9 @@ export default function HomeScreen() {
   const [input, setInput] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDueDate, setSelectedDueDate] = useState<number>();
-  const [selectedPriority, setSelectedPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [selectedPriority, setSelectedPriority] = useState<
+    "low" | "medium" | "high"
+  >("medium");
 
   useEffect(() => {
     initializeUser();
@@ -35,7 +36,7 @@ export default function HomeScreen() {
       });
       setInput("");
       setSelectedDueDate(undefined);
-      setSelectedPriority('medium');
+      setSelectedPriority("medium");
     }
   };
 
@@ -114,16 +115,13 @@ export default function HomeScreen() {
           onPress={() => setShowDatePicker(true)}
           style={[
             styles.iconButton,
-            selectedDueDate && { backgroundColor: "#3C88DF" },
+            selectedDueDate ? { backgroundColor: "#3C88DF" } : {},
           ]}
         >
           <ThemedText style={{ fontSize: 18 }}>📅</ThemedText>
         </Pressable>
 
-        <Pressable
-          onPress={handleAddTodo}
-          style={styles.addButton}
-        >
+        <Pressable onPress={handleAddTodo} style={styles.addButton}>
           <ThemedText style={styles.addButtonText}>Add</ThemedText>
         </Pressable>
       </View>

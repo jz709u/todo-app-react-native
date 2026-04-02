@@ -94,7 +94,7 @@ function StreakHabitRow({ todo, streak, onToggle }: StreakHabitRowProps) {
   const streakColor = getStreakColor(streak);
 
   return (
-    <View style={[styles.habitRow, { boundaryColor: streakColor }]}>
+    <View style={[styles.habitRow, { borderColor: streakColor }]}>
       <ThemedTodoRowView
         text={todo.text}
         isCompleted={todo.isCompleted}

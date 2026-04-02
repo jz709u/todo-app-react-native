@@ -1,14 +1,9 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
-import React from "react";
-import {
-  DatePickerAndroid,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import React, { useState } from "react";
+
+import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "./themed-text";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export type DueDatePickerProps = {
   visible: boolean;
@@ -32,6 +27,7 @@ export function DueDatePicker({
 }: DueDatePickerProps) {
   const backgroundColor = useThemeColor({}, "background");
   const tintColor = useThemeColor({}, "tint");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleQuickSelect = (days: number) => {
     const date = new Date();
@@ -41,25 +37,16 @@ export function DueDatePicker({
     onClose();
   };
 
-  const handleCustomDate = async () => {
+  const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === "android") {
-      try {
-        const result = await DatePickerAndroid.open({
-          date: selectedDate ? new Date(selectedDate) : new Date(),
-        });
-
-        if (result.action === DatePickerAndroid.dateSetAction) {
-          const date = new Date(result.year, result.month, result.day);
-          date.setHours(0, 0, 0, 0);
-          onSelect(date.getTime());
-          onClose();
-        }
-      } catch {
-        // Fallback or error handling
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      selectedDate.setHours(0, 0, 0, 0);
+      onSelect(selectedDate.getTime());
+      if (Platform.OS !== "android") {
+        onClose();
       }
-    } else {
-      // iOS users can use the quick options for now
-      // Full date picker can be added later with react-native-date-picker
     }
   };
 
@@ -101,12 +88,21 @@ export function DueDatePicker({
 
           <Pressable
             style={[styles.customButton, { backgroundColor: tintColor }]}
-            onPress={handleCustomDate}
+            onPress={() => setShowDatePicker(true)}
           >
             <ThemedText style={styles.customButtonText}>
               Choose Custom Date
             </ThemedText>
           </Pressable>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate ? new Date(selectedDate) : new Date()}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDateChange}
+            />
+          )}
 
           <Pressable
             style={[styles.cancelButton, { borderColor: tintColor }]}
