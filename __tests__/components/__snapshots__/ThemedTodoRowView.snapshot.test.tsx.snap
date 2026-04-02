@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`ThemedTodoRowView Snapshots should render completed todo correctly 1`] = `"Completed Todo"`;
+
+exports[`ThemedTodoRowView Snapshots should render incomplete todo correctly 1`] = `"Incomplete Todo"`;
+
+exports[`ThemedTodoRowView Snapshots should render long text without breaking 1`] = `"This is a very long todo text that might wrap to multiple lines in the UI"`;

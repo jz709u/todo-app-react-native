@@ -1,98 +1,152 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedTodoRowView } from "@/components/themed-todo-row-view";
+import { useTodoStore } from "@/store/todoStore";
+import React, { useEffect, useState } from "react";
+import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const {
+    todos,
+    addTodo,
+    toggleCompleted,
+    initializeUser,
+    isLoading,
+    isSyncing,
+    syncTodos,
+  } = useTodoStore();
+  const [input, setInput] = useState("");
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    initializeUser();
+  }, []);
+
+  const handleAddTodo = () => {
+    if (input.trim()) {
+      addTodo(input);
+      setInput("");
+    }
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ padding: 16, gap: 16, flexDirection: "column", flex: 1 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
+            Todo App
+          </ThemedText>
+          {isSyncing && (
+            <ThemedText style={{ fontSize: 12, color: "#666" }}>
+              Syncing...
+            </ThemedText>
+          )}
+        </View>
+        {isLoading ? (
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <ThemedText>Loading...</ThemedText>
+          </View>
+        ) : (
+          <FlatList
+            ListEmptyComponent={<EmptyTodoView />}
+            contentContainerStyle={{ flexGrow: 1 }}
+            data={todos}
+            renderItem={({ item: todo, index }) => (
+              <ThemedTodoRowView
+                text={todo.text}
+                isCompleted={todo.isCompleted}
+                toggleCompleted={() => toggleCompleted(index)}
+              />
+            )}
+          />
+        )}
+      </View>
+      <View
+        style={{
+          flexDirection: `row`,
+          gap: 8,
+          alignItems: "center",
+          backgroundColor: "#A1CEDC",
+          padding: 8,
+          borderRadius: 4,
+          marginHorizontal: 16,
+          marginBottom: 16,
+        }}
+      >
+        <TextInput
+          placeholder="Enter todo..."
+          style={styles.textInput}
+          value={input}
+          onChangeText={setInput}
+          onSubmitEditing={(event) => {
+            setInput(event.nativeEvent.text);
+          }}
+        />
+        <Pressable
+          onPress={handleAddTodo}
+          style={{
+            backgroundColor: "#3C88DF",
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderRadius: 4,
+          }}
+        >
+          <ThemedText style={{ color: "#fff", fontWeight: "bold" }}>
+            Add
+          </ThemedText>
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function EmptyTodoView() {
+  return (
+    <View style={styles.emptyView}>
+      <ThemedText style={{ fontSize: 18, fontWeight: "bold" }}>
+        No todos yet!
+      </ThemedText>
+      <ThemedText>Get started by adding your first todo below.</ThemedText>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
+  },
+  textInput: {
+    backgroundColor: "#fff",
+    borderRadius: 4,
+    padding: 8,
+    flex: 1,
+    flexShrink: 1,
+    height: 50,
   },
   stepContainer: {
     gap: 8,
     marginBottom: 8,
+  },
+  emptyView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffffff00",
   },
   reactLogo: {
     height: 178,
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
   },
 });
