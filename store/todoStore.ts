@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { supabase } from "@/lib/supabase";
 import { getTodos, syncTodos } from "@/lib/api";
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from "nanoid";
 import { expandRecurringTasks } from "@/lib/recurrence";
 
 interface TodoStore {
@@ -81,7 +81,7 @@ export const useTodoStore = create<TodoStore>()(
       addTodo: (text: string, options = {}) => {
         set((state) => {
           const newTodo: Todo = {
-            id: uuidv4(),
+            id: nanoid(),
             text,
             isCompleted: false,
             updatedAt: Date.now(),
