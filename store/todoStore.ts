@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { supabase } from "@/lib/supabase";
 import { getTodos, syncTodos } from "@/lib/api";
-import { nanoid } from "nanoid";
+import { nanoid } from "nanoid/non-secure";
 import { expandRecurringTasks } from "@/lib/recurrence";
 
 interface TodoStore {
