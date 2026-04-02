@@ -10,9 +10,9 @@ global.fetch = jest.fn(() =>
   })
 );
 
-// Mock uuid module
-jest.mock("uuid", () => ({
-  v4: () => "mock-uuid-" + Math.random().toString(36).substr(2, 9),
+// Mock nanoid module
+jest.mock("nanoid/non-secure", () => ({
+  nanoid: () => "mock-id-" + Math.random().toString(36).substr(2, 9),
 }));
 
 // Mock AsyncStorage FIRST - before any imports

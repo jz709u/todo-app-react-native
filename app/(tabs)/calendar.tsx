@@ -1,3 +1,4 @@
+import { Calendar } from "@/components/calendar";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedTodoRowView } from "@/components/themed-todo-row-view";
 import { useTodoStore } from "@/store/todoStore";
@@ -9,15 +10,6 @@ export default function CalendarScreen() {
   const { todos, toggleCompleted } = useTodoStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
-
-  const monthTodos = todos.filter((todo) => {
-    if (!todo.dueDate) return false;
-    const todoDate = new Date(todo.dueDate);
-    return (
-      todoDate.getMonth() === currentDate.getMonth() &&
-      todoDate.getFullYear() === currentDate.getFullYear()
-    );
-  });
 
   const getDayTodos = (day: number) => {
     const date = new Date(
@@ -41,47 +33,16 @@ export default function CalendarScreen() {
     return getDayTodos(selectedDate);
   };
 
-  const getDaysInMonth = () => {
-    return new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0,
-    ).getDate();
-  };
-
-  const getFirstDayOfMonth = () => {
-    return new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1,
-    ).getDay();
-  };
-
-  const previousMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1),
-    );
+  const handleMonthChange = (direction: "prev" | "next") => {
+    const newDate = new Date(currentDate);
+    if (direction === "prev") {
+      newDate.setMonth(currentDate.getMonth() - 1);
+    } else {
+      newDate.setMonth(currentDate.getMonth() + 1);
+    }
+    setCurrentDate(newDate);
     setSelectedDate(null);
   };
-
-  const nextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1),
-    );
-    setSelectedDate(null);
-  };
-
-  const daysInMonth = getDaysInMonth();
-  const firstDay = getFirstDayOfMonth();
-  const days: (number | null)[] = [
-    ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-
-  // Pad to complete the 6-week grid (42 days total)
-  while (days.length < 42) {
-    days.push(null);
-  }
 
   const selectedDateTodos = getSelectedDateTodos();
   const isToday =
@@ -92,50 +53,50 @@ export default function CalendarScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={{ padding: 16, gap: 16, flexDirection: "column", flex: 1 }}>
-        {/* Month Header */}
-        <View style={styles.monthHeader}>
-          <Pressable onPress={previousMonth}>
-            <ThemedText style={styles.navButton}>←</ThemedText>
-          </Pressable>
-          <ThemedText style={styles.monthTitle}>
-            {currentDate.toLocaleDateString("en-US", {
-              month: "long",
-              year: "numeric",
-            })}
-          </ThemedText>
-          <Pressable onPress={nextMonth}>
-            <ThemedText style={styles.navButton}>→</ThemedText>
-          </Pressable>
-        </View>
+        {/* Decoupled Calendar Component */}
+        <Calendar
+          currentDate={currentDate}
+          selectedDate={selectedDate}
+          onMonthChange={handleMonthChange}
+          onDateSelect={setSelectedDate}
+          renderDay={({ day, isSelected, isToday: isDayToday }) => {
+            if (day === null) {
+              return <View style={styles.emptyDayCell} />;
+            }
 
-        {/* Day Headers */}
-        <View style={styles.dayHeadersContainer}>
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <ThemedText key={day} style={styles.dayHeader}>
-              {day}
-            </ThemedText>
-          ))}
-        </View>
+            const todoCount = getDayTodos(day).length;
 
-        {/* Calendar Grid */}
-        <FlatList
-          data={days}
-          numColumns={7}
-          renderItem={({ item: day }) => (
-            <CalendarDay
-              day={day}
-              isSelected={day === selectedDate}
-              todoCount={day ? getDayTodos(day).length : 0}
-              isToday={
-                day === new Date().getDate() &&
-                currentDate.getMonth() === new Date().getMonth() &&
-                currentDate.getFullYear() === new Date().getFullYear()
-              }
-              onPress={() => day && setSelectedDate(day)}
-            />
-          )}
-          keyExtractor={(item, index) => index.toString()}
-          scrollEnabled={false}
+            return (
+              <Pressable
+                style={[
+                  styles.dayCell,
+                  isSelected && styles.selectedDayCell,
+                  isDayToday && styles.todayCell,
+                ]}
+                onPress={() => setSelectedDate(day)}
+              >
+                <ThemedText
+                  style={[
+                    styles.dayNumber,
+                    isSelected && styles.selectedDayNumber,
+                    isDayToday && styles.todayNumber,
+                  ]}
+                >
+                  {day}
+                </ThemedText>
+                {todoCount > 0 && (
+                  <ThemedText
+                    style={[
+                      styles.todoCount,
+                      isSelected && styles.selectedTodoCount,
+                    ]}
+                  >
+                    {todoCount}
+                  </ThemedText>
+                )}
+              </Pressable>
+            );
+          }}
         />
 
         {/* Selected Day Todos */}
@@ -181,82 +142,12 @@ export default function CalendarScreen() {
   );
 }
 
-interface CalendarDayProps {
-  day: number | null;
-  isSelected: boolean;
-  todoCount: number;
-  isToday: boolean;
-  onPress: () => void;
-}
-
-function CalendarDay({
-  day,
-  isSelected,
-  todoCount,
-  isToday,
-  onPress,
-}: CalendarDayProps) {
-  if (day === null) {
-    return <View style={styles.emptyDayCell} />;
-  }
-
-  return (
-    <Pressable
-      style={[
-        styles.dayCell,
-        isSelected && styles.selectedDayCell,
-        isToday && styles.todayCell,
-      ]}
-      onPress={onPress}
-    >
-      <ThemedText
-        style={[
-          styles.dayNumber,
-          isSelected && styles.selectedDayNumber,
-          isToday && styles.todayNumber,
-        ]}
-      >
-        {day}
-      </ThemedText>
-      {todoCount > 0 && (
-        <ThemedText
-          style={[styles.todoCount, isSelected && styles.selectedTodoCount]}
-        >
-          {todoCount}
-        </ThemedText>
-      )}
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  monthHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 8,
-  },
-  navButton: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  monthTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  dayHeadersContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  dayHeader: {
+  emptyDayCell: {
     flex: 1,
-    textAlign: "center",
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#999",
+    aspectRatio: 1,
+    flexBasis: "14.28%",
+    backgroundColor: "transparent",
   },
   dayCell: {
     flex: 1,
@@ -270,12 +161,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 2,
-  },
-  emptyDayCell: {
-    flex: 1,
-    aspectRatio: 1,
-    flexBasis: "14.28%",
-    backgroundColor: "transparent",
   },
   dayNumber: {
     fontSize: 12,
