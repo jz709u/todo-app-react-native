@@ -7,7 +7,7 @@ export interface CalendarProps {
   selectedDate: number | null;
   onMonthChange: (direction: "prev" | "next") => void;
   onDateSelect: (day: number) => void;
-  renderDay?: (props: CalendarDayRenderProps) => React.ReactNode;
+  renderDay?: (props: CalendarDayRenderProps) => React.ReactElement | null;
 }
 
 export interface CalendarDayRenderProps {
