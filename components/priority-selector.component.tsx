@@ -1,11 +1,11 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, ViewProps } from "react-native";
 import { ThemedText } from "./themed-text.component";
 
 export type PrioritySelectorProps = {
   value: "low" | "medium" | "high";
   onValueChange: (value: "low" | "medium" | "high") => void;
-};
+} & ViewProps;
 
 const PRIORITIES = [
   { label: "Low", value: "low" as const, color: "#FFD700" },
@@ -16,9 +16,10 @@ const PRIORITIES = [
 export function PrioritySelector({
   value,
   onValueChange,
+  style,
 }: PrioritySelectorProps) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <ThemedText style={styles.label}>Priority</ThemedText>
       <View style={styles.buttonsContainer}>
         {PRIORITIES.map((priority) => (

@@ -6,13 +6,8 @@ import { FlatList, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const {
-    todos,
-    toggleCompleted,
-    initializeUser,
-    isLoading,
-    isSyncing,
-  } = useTodoStore();
+  const { todos, toggleCompleted, initializeUser, isLoading, isSyncing } =
+    useTodoStore();
 
   useEffect(() => {
     initializeUser();

@@ -1,16 +1,17 @@
 import { DueDatePicker } from "@/components/due-date-picker.component";
+import { PrioritySelector } from "@/components/priority-selector.component";
 import { ThemedText } from "@/components/themed-text.component";
 import { useTodoStore } from "@/store/todoStore";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddTodoModal() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function AddTodoModal() {
   const [text, setText] = useState("");
   const [selectedDueDate, setSelectedDueDate] = useState<number>();
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
 
   const formatDueDate = (timestamp?: number) => {
     if (!timestamp) return "No date";
@@ -114,6 +116,14 @@ export default function AddTodoModal() {
         }}
         selectedDate={selectedDueDate}
       />
+
+      <PrioritySelector
+        style={{ marginBottom: 16, paddingHorizontal: 16 }}
+        value={priority}
+        onValueChange={(priority) => {
+          setPriority(priority);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -122,13 +132,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingVertical: 12,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingHorizontal: 16,
     borderBottomColor: "#E0E0E0",
     borderBottomWidth: 1,
   },

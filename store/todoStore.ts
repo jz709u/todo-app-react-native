@@ -1,28 +1,33 @@
+import { syncTodos } from "@/lib/api";
+import { expandRecurringTasks } from "@/lib/recurrence";
+import { supabase } from "@/lib/supabase";
 import Todo from "@/model/Todo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { nanoid } from "nanoid/non-secure";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { supabase } from "@/lib/supabase";
-import { getTodos, syncTodos } from "@/lib/api";
-import { nanoid } from "nanoid/non-secure";
-import { expandRecurringTasks } from "@/lib/recurrence";
 
 interface TodoStore {
   todos: Todo[];
   userId: string | null;
   isLoading: boolean;
   isSyncing: boolean;
+  hasHydrated: boolean;
 
   initializeUser: () => Promise<void>;
-  addTodo: (text: string, options?: {
-    dueDate?: number;
-    priority?: 'low' | 'medium' | 'high';
-    isHabit?: boolean;
-    recurrence?: {
-      type: 'daily' | 'weekly' | 'monthly' | null;
-      endDate?: number;
-    };
-  }) => void;
+  waitForHydration: () => Promise<void>;
+  addTodo: (
+    text: string,
+    options?: {
+      dueDate?: number;
+      priority?: "low" | "medium" | "high";
+      isHabit?: boolean;
+      recurrence?: {
+        type: "daily" | "weekly" | "monthly" | null;
+        endDate?: number;
+      };
+    },
+  ) => void;
   toggleCompleted: (index: number) => void;
   removeTodo: (index: number) => void;
   updateTodo: (index: number, updates: Partial<Todo>) => void;
@@ -32,7 +37,7 @@ interface TodoStore {
   getUpcomingTodos: (days?: number) => Todo[];
 
   // Priority filtering
-  filterByPriority: (priority: 'low' | 'medium' | 'high') => Todo[];
+  filterByPriority: (priority: "low" | "medium" | "high") => Todo[];
 
   // Habit tracking
   getHabits: () => Todo[];
@@ -45,6 +50,8 @@ interface TodoStore {
 
 let syncInterval: ReturnType<typeof setInterval> | null = null;
 const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+let hydrationWaiters: Array<() => void> = [];
+let updateHydrationState: ((hasHydrated: boolean) => void) | null = null;
 
 export const useTodoStore = create<TodoStore>()(
   persist(
@@ -53,6 +60,17 @@ export const useTodoStore = create<TodoStore>()(
       userId: null,
       isLoading: false,
       isSyncing: false,
+      hasHydrated: false,
+
+      waitForHydration: () => {
+        if (get().hasHydrated) {
+          return Promise.resolve();
+        }
+
+        return new Promise((resolve) => {
+          hydrationWaiters.push(resolve);
+        });
+      },
 
       initializeUser: async () => {
         set({ isLoading: true });
@@ -72,7 +90,7 @@ export const useTodoStore = create<TodoStore>()(
           await get().syncTodos();
           get().startPeriodicSync();
         } catch (error) {
-          console.error("Failed to initialize user:", error);
+          //console.error("Failed to initialize user:", error);
         } finally {
           set({ isLoading: false });
         }
@@ -86,7 +104,7 @@ export const useTodoStore = create<TodoStore>()(
             isCompleted: false,
             updatedAt: Date.now(),
             dueDate: options.dueDate,
-            priority: options.priority || 'medium',
+            priority: options.priority || "medium",
             isHabit: options.isHabit || false,
             recurrence: options.recurrence,
             createdDate: Date.now(),
@@ -106,8 +124,13 @@ export const useTodoStore = create<TodoStore>()(
                   ...todo,
                   isCompleted: !todo.isCompleted,
                   updatedAt: Date.now(),
-                  lastCompletedDate: !todo.isCompleted ? Date.now() : todo.lastCompletedDate,
-                  habitStreak: !todo.isCompleted && todo.isHabit ? (todo.habitStreak || 0) + 1 : 0,
+                  lastCompletedDate: !todo.isCompleted
+                    ? Date.now()
+                    : todo.lastCompletedDate,
+                  habitStreak:
+                    !todo.isCompleted && todo.isHabit
+                      ? (todo.habitStreak || 0) + 1
+                      : 0,
                 }
               : todo,
           ),
@@ -123,9 +146,7 @@ export const useTodoStore = create<TodoStore>()(
       updateTodo: (index: number, updates: Partial<Todo>) => {
         set((state) => ({
           todos: state.todos.map((todo, i) =>
-            i === index
-              ? { ...todo, ...updates, updatedAt: Date.now() }
-              : todo,
+            i === index ? { ...todo, ...updates, updatedAt: Date.now() } : todo,
           ),
         }));
       },
@@ -139,14 +160,14 @@ export const useTodoStore = create<TodoStore>()(
         nextDay.setDate(nextDay.getDate() + 1);
         const nextDayTime = nextDay.getTime();
 
-        return get().todos
-          .filter(
+        return get()
+          .todos.filter(
             (todo) =>
               todo.dueDate &&
               todo.dueDate >= targetTime &&
               todo.dueDate < nextDayTime,
           )
-          .sort((a, b) => (a.priority === 'high' ? -1 : 1));
+          .sort((a, b) => (a.priority === "high" ? -1 : 1));
       },
 
       getUpcomingTodos: (days = 7) => {
@@ -164,12 +185,14 @@ export const useTodoStore = create<TodoStore>()(
             if (a.dueDate && b.dueDate) {
               if (a.dueDate !== b.dueDate) return a.dueDate - b.dueDate;
             }
-            return (a.priority === 'high' ? -1 : 1);
+            return a.priority === "high" ? -1 : 1;
           });
       },
 
-      filterByPriority: (priority: 'low' | 'medium' | 'high') => {
-        return get().todos.filter((todo) => (todo.priority || 'medium') === priority);
+      filterByPriority: (priority: "low" | "medium" | "high") => {
+        return get().todos.filter(
+          (todo) => (todo.priority || "medium") === priority,
+        );
       },
 
       getHabits: () => {
@@ -197,7 +220,7 @@ export const useTodoStore = create<TodoStore>()(
             todos: [...remoteTodos, ...localOnly],
           });
         } catch (error) {
-          console.error("Failed to sync todos:", error);
+          //onsole.error("Failed to sync todos:", error);
         } finally {
           set({ isSyncing: false });
         }
@@ -221,6 +244,15 @@ export const useTodoStore = create<TodoStore>()(
     {
       name: "todo-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => () => {
+        updateHydrationState?.(true);
+        hydrationWaiters.forEach((resolve) => resolve());
+        hydrationWaiters = [];
+      },
     },
   ),
 );
+
+updateHydrationState = (hasHydrated: boolean) => {
+  useTodoStore.setState({ hasHydrated });
+};

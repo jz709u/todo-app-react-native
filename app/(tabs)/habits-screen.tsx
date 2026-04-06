@@ -17,7 +17,6 @@ export default function HabitsScreen() {
   }));
 
   const sortedHabits = habitsWithStats.sort((a, b) => b.streak - a.streak);
-
   const totalStreak = habitsWithStats.reduce((sum, h) => sum + h.streak, 0);
   const activeHabits = habitsWithStats.filter((h) => h.streak > 0).length;
 
@@ -29,14 +28,7 @@ export default function HabitsScreen() {
         </ThemedText>
 
         {habits.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <ThemedText style={{ fontSize: 16, textAlign: "center" }}>
-              No habits yet!
-            </ThemedText>
-            <ThemedText style={{ fontSize: 14, color: "#999", marginTop: 8 }}>
-              Mark a task as a habit from the main screen to start tracking
-            </ThemedText>
-          </View>
+          <EmptyHabitView />
         ) : (
           <>
             <View style={styles.statsContainer}>
@@ -74,6 +66,19 @@ export default function HabitsScreen() {
         )}
       </View>
     </SafeAreaView>
+  );
+}
+
+function EmptyHabitView() {
+  return (
+    <View style={styles.emptyContainer}>
+      <ThemedText style={{ fontSize: 16, textAlign: "center" }}>
+        No habits yet!
+      </ThemedText>
+      <ThemedText style={{ fontSize: 14, color: "#999", marginTop: 8 }}>
+        Mark a task as a habit from the main screen to start tracking
+      </ThemedText>
+    </View>
   );
 }
 

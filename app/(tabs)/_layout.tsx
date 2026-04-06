@@ -30,7 +30,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="calendar"
+          name="calendar-screen"
           options={{
             title: "Calendar",
             tabBarIcon: ({ color }) => (
@@ -39,7 +39,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="habits"
+          name="habits-screen"
           options={{
             title: "Habits",
             tabBarIcon: ({ color }) => (
@@ -52,7 +52,7 @@ export default function TabLayout() {
       {/* Floating Action Button */}
       <Pressable
         style={styles.fab}
-        onPress={() => router.push("/add-todo-modal.view")}
+        onPress={() => router.push("/add-todo-modal-screen")}
       >
         <IconSymbol size={28} name="plus.circle.fill" color="#fff" />
       </Pressable>
