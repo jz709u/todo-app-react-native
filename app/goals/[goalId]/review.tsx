@@ -15,6 +15,7 @@ import {
   createDraftPlanForGoal,
 } from "@/lib/planner/planWorkflowService";
 import PlanStep from "@/model/PlanStep";
+import { TaskPriority } from "@/model/Task";
 import { useGoalStore } from "@/store/goalStore";
 import { usePlanStore } from "@/store/planStore";
 import { useTaskStore } from "@/store/taskStore";
@@ -30,7 +31,9 @@ export default function GoalPlanReviewScreen() {
   const goalsById = useGoalStore((state) => state.goalsById);
   const planOrder = usePlanStore((state) => state.planOrder);
   const plansById = usePlanStore((state) => state.plansById);
+  const createPlanStep = usePlanStore((state) => state.createPlanStep);
   const updatePlanStep = usePlanStore((state) => state.updatePlanStep);
+  const removePlanStep = usePlanStore((state) => state.removePlanStep);
   const planStepOrderByPlanId = usePlanStore(
     (state) => state.planStepOrderByPlanId,
   );
@@ -40,6 +43,8 @@ export default function GoalPlanReviewScreen() {
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
+  const [editedPriority, setEditedPriority] = useState<TaskPriority>("medium");
+  const [editedEstimatedMinutes, setEditedEstimatedMinutes] = useState("");
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
@@ -100,12 +105,18 @@ export default function GoalPlanReviewScreen() {
     setEditingStepId(step.id);
     setEditedTitle(step.title);
     setEditedDescription(step.description ?? "");
+    setEditedPriority(step.priority ?? "medium");
+    setEditedEstimatedMinutes(
+      step.estimatedMinutes ? String(step.estimatedMinutes) : "",
+    );
   };
 
   const handleCancelEditing = () => {
     setEditingStepId(null);
     setEditedTitle("");
     setEditedDescription("");
+    setEditedPriority("medium");
+    setEditedEstimatedMinutes("");
   };
 
   const handleSaveStepEdit = (step: PlanStep) => {
@@ -114,9 +125,16 @@ export default function GoalPlanReviewScreen() {
       return;
     }
 
+    const parsedMinutes = Number(editedEstimatedMinutes);
+
     updatePlanStep(step.id, {
       title: nextTitle,
       description: editedDescription.trim() || undefined,
+      priority: editedPriority,
+      estimatedMinutes:
+        editedEstimatedMinutes.trim() && !Number.isNaN(parsedMinutes)
+          ? parsedMinutes
+          : undefined,
       status: "approved",
       approvalState: "edited",
     });
@@ -135,6 +153,72 @@ export default function GoalPlanReviewScreen() {
       status: "rejected",
       approvalState: "rejected",
     });
+  };
+
+  const handleBulkApprove = () => {
+    draftSteps.forEach((step) => {
+      updatePlanStep(step.id, {
+        status: "approved",
+        approvalState: "approved",
+      });
+    });
+  };
+
+  const handleBulkReject = () => {
+    draftSteps.forEach((step) => {
+      updatePlanStep(step.id, {
+        status: "rejected",
+        approvalState: "rejected",
+      });
+    });
+  };
+
+  const handleAddStep = () => {
+    if (!draftPlan) {
+      return;
+    }
+
+    const stepId = createPlanStep({
+      planId: draftPlan.id,
+      title: "New custom step",
+      description: "Add the detail for this step.",
+      order: draftSteps.length + 1,
+      estimatedMinutes: 30,
+      priority: "medium",
+      status: "proposed",
+      approvalState: "pending",
+    });
+
+    const createdStep = planStepsById[stepId];
+    if (createdStep) {
+      handleStartEditing(createdStep);
+    } else {
+      setEditingStepId(stepId);
+      setEditedTitle("New custom step");
+      setEditedDescription("Add the detail for this step.");
+      setEditedPriority("medium");
+      setEditedEstimatedMinutes("30");
+    }
+  };
+
+  const handleDeleteStep = (stepId: string) => {
+    removePlanStep(stepId);
+    if (editingStepId === stepId) {
+      handleCancelEditing();
+    }
+  };
+
+  const handleMoveStep = (step: PlanStep, direction: "up" | "down") => {
+    const currentIndex = draftSteps.findIndex((draftStep) => draftStep.id === step.id);
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= draftSteps.length) {
+      return;
+    }
+
+    const targetStep = draftSteps[targetIndex];
+    updatePlanStep(step.id, { order: targetStep.order });
+    updatePlanStep(targetStep.id, { order: step.order });
   };
 
   const handleApprovePlan = () => {
@@ -213,15 +297,27 @@ export default function GoalPlanReviewScreen() {
               <ThemedText style={styles.metaText}>
                 Status: {formatPlanStatus(draftPlan.status)}
               </ThemedText>
-              <Pressable
-                onPress={() => void handleGenerateDraft()}
-                style={styles.secondaryButton}
-                disabled={isGeneratingDraft}
-              >
-                <ThemedText style={styles.secondaryButtonText}>
-                  {isGeneratingDraft ? "Generating..." : "Regenerate"}
-                </ThemedText>
-              </Pressable>
+              <View style={styles.toolbarRow}>
+                <Pressable style={styles.secondaryButton} onPress={handleBulkApprove}>
+                  <ThemedText style={styles.secondaryButtonText}>
+                    Approve All
+                  </ThemedText>
+                </Pressable>
+                <Pressable style={styles.neutralButton} onPress={handleBulkReject}>
+                  <ThemedText style={styles.neutralButtonText}>
+                    Reject All
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  onPress={() => void handleGenerateDraft()}
+                  style={styles.secondaryButton}
+                  disabled={isGeneratingDraft}
+                >
+                  <ThemedText style={styles.secondaryButtonText}>
+                    {isGeneratingDraft ? "Generating..." : "Regenerate"}
+                  </ThemedText>
+                </Pressable>
+              </View>
             </View>
             <ThemedText style={styles.metaText}>
               {approvedStepCount === 0
@@ -252,7 +348,14 @@ export default function GoalPlanReviewScreen() {
           </SectionCard>
 
           <View style={styles.section}>
-            <ThemedText type="subheading">Review steps</ThemedText>
+            <View style={styles.sectionHeader}>
+              <ThemedText type="subheading">Review steps</ThemedText>
+              <Pressable style={styles.secondaryButton} onPress={handleAddStep}>
+                <ThemedText style={styles.secondaryButtonText}>
+                  Add Step
+                </ThemedText>
+              </Pressable>
+            </View>
             {draftSteps.map((step) => (
               <SectionCard key={step.id}>
                 <View style={styles.stepTopRow}>
@@ -273,11 +376,87 @@ export default function GoalPlanReviewScreen() {
                         style={[styles.input, styles.descriptionInput]}
                         multiline
                       />
+                      <View style={styles.inlineFields}>
+                        <View style={styles.fieldBlock}>
+                          <ThemedText style={styles.metaText}>Priority</ThemedText>
+                          <View style={styles.priorityRow}>
+                            {(["low", "medium", "high"] as TaskPriority[]).map(
+                              (priority) => (
+                                <Pressable
+                                  key={priority}
+                                  style={[
+                                    styles.priorityChip,
+                                    editedPriority === priority &&
+                                      styles.priorityChipActive,
+                                  ]}
+                                  onPress={() => setEditedPriority(priority)}
+                                >
+                                  <ThemedText
+                                    style={[
+                                      styles.priorityChipText,
+                                      editedPriority === priority &&
+                                        styles.priorityChipTextActive,
+                                    ]}
+                                  >
+                                    {priority}
+                                  </ThemedText>
+                                </Pressable>
+                              ),
+                            )}
+                          </View>
+                        </View>
+                        <View style={styles.fieldBlock}>
+                          <ThemedText style={styles.metaText}>
+                            Estimate (min)
+                          </ThemedText>
+                          <TextInput
+                            value={editedEstimatedMinutes}
+                            onChangeText={setEditedEstimatedMinutes}
+                            placeholder="30"
+                            placeholderTextColor="#98A2B3"
+                            style={styles.input}
+                            keyboardType="numeric"
+                          />
+                        </View>
+                      </View>
                     </View>
                   ) : (
-                    <ThemedText type="subheading">
-                      {step.order}. {step.title}
-                    </ThemedText>
+                    <View style={styles.stepTitleRow}>
+                      <ThemedText type="subheading" style={styles.stepTitleText}>
+                        {step.order}. {step.title}
+                      </ThemedText>
+                      <View style={styles.reorderRow}>
+                        <Pressable
+                          style={styles.reorderButton}
+                          onPress={() => handleMoveStep(step, "up")}
+                          disabled={step.order === 1}
+                        >
+                          <ThemedText
+                            style={[
+                              styles.reorderButtonText,
+                              step.order === 1 && styles.disabledButtonText,
+                            ]}
+                          >
+                            Up
+                          </ThemedText>
+                        </Pressable>
+                        <Pressable
+                          style={styles.reorderButton}
+                          onPress={() => handleMoveStep(step, "down")}
+                          disabled={step.order === draftSteps.length}
+                        >
+                          <ThemedText
+                            style={[
+                              styles.reorderButtonText,
+                              step.order === draftSteps.length &&
+                                styles.disabledButtonText,
+                            ]}
+                          >
+                            Down
+                          </ThemedText>
+                        </Pressable>
+                      </View>
+                    </View>
                   )}
                   <ThemedText style={styles.metaText}>
                     {formatStepStatus(step.status)}
@@ -289,7 +468,7 @@ export default function GoalPlanReviewScreen() {
                   </ThemedText>
                 ) : null}
                 <ThemedText style={styles.metaText}>
-                  Approval: {formatStepApprovalState(step.approvalState)} · Priority: {step.priority ?? "medium"}
+                  Approval: {formatStepApprovalState(step.approvalState)} · Priority: {step.priority ?? "medium"} · Estimate: {step.estimatedMinutes ?? "n/a"} min
                 </ThemedText>
                 <View style={styles.buttonRow}>
                   {editingStepId === step.id ? (
@@ -308,6 +487,14 @@ export default function GoalPlanReviewScreen() {
                       >
                         <ThemedText style={styles.neutralButtonText}>
                           Cancel
+                        </ThemedText>
+                      </Pressable>
+                      <Pressable
+                        style={styles.rejectButton}
+                        onPress={() => handleDeleteStep(step.id)}
+                      >
+                        <ThemedText style={styles.rejectButtonText}>
+                          Delete
                         </ThemedText>
                       </Pressable>
                     </>
@@ -335,6 +522,14 @@ export default function GoalPlanReviewScreen() {
                       >
                         <ThemedText style={styles.rejectButtonText}>
                           Reject
+                        </ThemedText>
+                      </Pressable>
+                      <Pressable
+                        style={styles.neutralButton}
+                        onPress={() => handleDeleteStep(step.id)}
+                      >
+                        <ThemedText style={styles.neutralButtonText}>
+                          Delete
                         </ThemedText>
                       </Pressable>
                     </>
@@ -396,13 +591,21 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   summaryRow: {
+    gap: 12,
+  },
+  toolbarRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  section: {
+    gap: 10,
+  },
+  sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 12,
-  },
-  section: {
-    gap: 10,
   },
   metaText: {
     color: semanticColors.textMuted,
@@ -415,8 +618,23 @@ const styles = StyleSheet.create({
   stepTopRow: {
     gap: 8,
   },
+  stepTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  stepTitleText: {
+    flex: 1,
+  },
   editForm: {
     gap: 8,
+  },
+  inlineFields: {
+    gap: 12,
+  },
+  fieldBlock: {
+    gap: 6,
   },
   input: {
     borderWidth: 1,
@@ -430,6 +648,45 @@ const styles = StyleSheet.create({
   descriptionInput: {
     minHeight: 90,
     textAlignVertical: "top",
+  },
+  priorityRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  priorityChip: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: "#F3F4F6",
+  },
+  priorityChipActive: {
+    backgroundColor: "#111827",
+  },
+  priorityChipText: {
+    color: "#374151",
+    fontWeight: "600",
+  },
+  priorityChipTextActive: {
+    color: "#FFFFFF",
+  },
+  reorderRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  reorderButton: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  reorderButtonText: {
+    color: "#374151",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+  disabledButtonText: {
+    color: "#D0D5DD",
   },
   buttonRow: {
     flexDirection: "row",
