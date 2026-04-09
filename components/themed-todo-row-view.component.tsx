@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { formatRelativeCalendarDate } from "@/lib/formatters/date";
 import { SFSymbol, SymbolView } from "expo-symbols";
 import { Priority } from "./priority-selector.component";
 import { ThemedText } from "./themed-text.component";
@@ -39,24 +40,6 @@ export function ThemedTodoRowView({
 
   const isOverdue = dueDate && dueDate < Date.now() && !isCompleted;
 
-  const formatDueDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Tomorrow";
-    }
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   return (
     <View
       style={[
@@ -89,7 +72,7 @@ export function ThemedTodoRowView({
                 isOverdue ? themedRowStyles.overdueText : {},
               ]}
             >
-              📅 {formatDueDate(dueDate)}
+              📅 {formatRelativeCalendarDate(dueDate)}
             </ThemedText>
           )}
           {priority && priority !== "medium" && (

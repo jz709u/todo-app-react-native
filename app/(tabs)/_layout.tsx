@@ -39,6 +39,15 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="goals-screen"
+          options={{
+            title: "Goals",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="checkmark.circle.fill" color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="habits-screen"
           options={{
             title: "Habits",

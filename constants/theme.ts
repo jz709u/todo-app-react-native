@@ -56,6 +56,16 @@ export const Colors = {
   },
 };
 
+export const semanticColors = {
+  screenBackground: "#F8FAFC",
+  surface: "#FFFFFF",
+  textMuted: "#667085",
+  textSubtle: "#475467",
+  borderSubtle: "#E2E8F0",
+  statusInfoBg: "#E0F2FE",
+  statusInfoText: "#075985",
+};
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

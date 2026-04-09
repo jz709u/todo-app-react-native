@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/empty-state.component";
 import { ThemedText } from "@/components/themed-text.component";
 import { ThemedTodoRowView } from "@/components/themed-todo-row-view.component";
 import { useTodoStore } from "@/store/todoStore";
@@ -83,19 +84,13 @@ function TodoListView() {
 
 function EmptyTodoView() {
   return (
-    <View style={styles.emptyView}>
-      <ThemedText style={{ fontSize: 18, fontWeight: "bold" }}>
-        No todos yet!
-      </ThemedText>
-      <ThemedText>Tap the + button to create your first todo.</ThemedText>
-    </View>
+    <EmptyState
+      title="No todos yet!"
+      description="Tap the + button to create your first todo."
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  emptyView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  emptyView: {},
 });

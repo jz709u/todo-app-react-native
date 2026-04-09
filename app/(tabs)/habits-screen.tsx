@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/empty-state.component";
 import { ThemedText } from "@/components/themed-text.component";
 import { ThemedTodoRowView } from "@/components/themed-todo-row-view.component";
 import { useTodoStore } from "@/store/todoStore";
@@ -70,14 +71,10 @@ export default function HabitsScreen() {
 
 function EmptyHabitView() {
   return (
-    <View style={styles.emptyContainer}>
-      <ThemedText style={{ fontSize: 16, textAlign: "center" }}>
-        No habits yet!
-      </ThemedText>
-      <ThemedText style={{ fontSize: 14, color: "#999", marginTop: 8 }}>
-        Mark a task as a habit from the main screen to start tracking
-      </ThemedText>
-    </View>
+    <EmptyState
+      title="No habits yet!"
+      description="Mark a task as a habit from the main screen to start tracking."
+    />
   );
 }
 
@@ -113,12 +110,6 @@ function StreakHabitRow({ todo, streak, onToggle }: StreakHabitRowProps) {
 }
 
 const styles = StyleSheet.create({
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
   statsContainer: {
     flexDirection: "row",
     gap: 12,

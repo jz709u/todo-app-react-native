@@ -4,6 +4,7 @@ import { Priority } from "@/components/priority-selector.component";
 import { RecurrenceType } from "@/components/recurrence-selector.component";
 import SelectorPicker from "@/components/themed-selector-picker.component";
 import { ThemedText } from "@/components/themed-text.component";
+import { formatRelativeCalendarDate } from "@/lib/formatters/date";
 import { useTodoStore } from "@/store/todoStore";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -25,25 +26,6 @@ export default function AddTodoModal() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [priority, setPriority] = useState<Priority>("medium");
   const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
-
-  const formatDueDate = (timestamp?: number) => {
-    if (!timestamp) return undefined;
-    const date = new Date(timestamp);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Tomorrow";
-    }
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const handleAddTodo = () => {
     if (text.trim()) {
@@ -110,7 +92,7 @@ export default function AddTodoModal() {
 
         <SelectorPicker
           title="Due Date"
-          value={formatDueDate(selectedDueDate)}
+          value={formatRelativeCalendarDate(selectedDueDate)}
           noValueText="No Date"
           onPress={() => setShowDatePicker(true)}
           removePressed={() => setSelectedDueDate(undefined)}
