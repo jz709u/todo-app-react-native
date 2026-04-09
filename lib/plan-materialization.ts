@@ -1,7 +1,7 @@
 import PlanStep from "@/model/PlanStep";
 import Goal from "@/model/Goal";
 import Task from "@/model/Task";
-import { MockPlanStepDraft } from "@/lib/mock-goal-planner";
+import { PlanStepDraft } from "@/lib/planner/types";
 
 export function getApprovedPlanSteps(steps: PlanStep[]) {
   return steps.filter(
@@ -10,7 +10,7 @@ export function getApprovedPlanSteps(steps: PlanStep[]) {
   );
 }
 
-export function buildTaskTitleFromStep(step: PlanStep | MockPlanStepDraft) {
+export function buildTaskTitleFromStep(step: PlanStep | PlanStepDraft) {
   return step.title;
 }
 

@@ -1,19 +1,5 @@
 import Goal from "@/model/Goal";
-import { TaskPriority } from "@/model/Task";
-
-export interface MockPlanStepDraft {
-  title: string;
-  description: string;
-  estimatedMinutes: number;
-  priority: TaskPriority;
-}
-
-export interface MockPlanDraft {
-  summary: string;
-  assumptions: string[];
-  risks: string[];
-  steps: MockPlanStepDraft[];
-}
+import { PlanDraft } from "@/lib/planner/types";
 
 function buildStepTitleFragments(goal: Goal) {
   const normalizedTitle = goal.title.trim();
@@ -27,7 +13,7 @@ function buildStepTitleFragments(goal: Goal) {
   ];
 }
 
-export function generateMockPlan(goal: Goal): MockPlanDraft {
+export function generateMockPlan(goal: Goal): PlanDraft {
   const notes = goal.constraints.notes?.trim();
   const tools = goal.constraints.tools?.length
     ? goal.constraints.tools.join(", ")

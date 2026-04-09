@@ -14,7 +14,7 @@ import {
   getApprovedPlanSteps,
   hasMaterializedTaskForStep,
 } from "@/lib/plan-materialization";
-import { generateMockPlan } from "@/lib/mock-goal-planner";
+import { requestPlanDraft } from "@/lib/planner/planDraftService";
 import Goal from "@/model/Goal";
 import PlanStep from "@/model/PlanStep";
 import { useGoalStore } from "@/store/goalStore";
@@ -58,6 +58,7 @@ export default function GoalPlanReviewScreen() {
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
+  const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
 
   const goal = goalId ? goalsById[goalId] : undefined;
   const draftPlan = goalId
@@ -84,38 +85,44 @@ export default function GoalPlanReviewScreen() {
     hasMaterializedTaskForStep(existingTasks, step.id),
   ).length;
 
-  const handleGenerateDraft = () => {
+  const handleGenerateDraft = async () => {
     if (!goalId || !goal) {
       return;
     }
+
+    setIsGeneratingDraft(true);
 
     if (draftPlan) {
       updatePlan(draftPlan.id, { status: "superseded" });
     }
 
-    const generated = generateMockPlan(goal);
-    const planId = createPlan({
-      goalId,
-      summary: generated.summary,
-      assumptions: generated.assumptions,
-      risks: generated.risks,
-      status: "awaiting_approval",
-    });
-
-    generated.steps.forEach((step, index) => {
-      createPlanStep({
-        planId,
-        title: step.title,
-        description: step.description,
-        order: index + 1,
-        estimatedMinutes: step.estimatedMinutes,
-        priority: step.priority,
-        status: "proposed",
-        approvalState: "pending",
+    try {
+      const generated = await requestPlanDraft(goal);
+      const planId = createPlan({
+        goalId,
+        summary: generated.summary,
+        assumptions: generated.assumptions,
+        risks: generated.risks,
+        status: "awaiting_approval",
       });
-    });
 
-    updateGoal(goalId, { status: "planning" });
+      generated.steps.forEach((step, index) => {
+        createPlanStep({
+          planId,
+          title: step.title,
+          description: step.description,
+          order: index + 1,
+          estimatedMinutes: step.estimatedMinutes,
+          priority: step.priority,
+          status: "proposed",
+          approvalState: "pending",
+        });
+      });
+
+      updateGoal(goalId, { status: "planning" });
+    } finally {
+      setIsGeneratingDraft(false);
+    }
   };
 
   const handleStartEditing = (step: PlanStep) => {
@@ -238,9 +245,13 @@ export default function GoalPlanReviewScreen() {
               This local-only flow generates a reviewable draft plan so you can
               validate the UX before backend AI integration.
             </ThemedText>
-            <Pressable style={styles.primaryButton} onPress={handleGenerateDraft}>
+            <Pressable
+              style={styles.primaryButton}
+              onPress={() => void handleGenerateDraft()}
+              disabled={isGeneratingDraft}
+            >
               <ThemedText style={styles.primaryButtonText}>
-                Generate Mock Plan
+                {isGeneratingDraft ? "Generating..." : "Generate Mock Plan"}
               </ThemedText>
             </Pressable>
           </SectionCard>
@@ -256,9 +267,13 @@ export default function GoalPlanReviewScreen() {
               <ThemedText style={styles.metaText}>
                 Status: {formatPlanStatus(draftPlan.status)}
               </ThemedText>
-              <Pressable onPress={handleGenerateDraft} style={styles.secondaryButton}>
+              <Pressable
+                onPress={() => void handleGenerateDraft()}
+                style={styles.secondaryButton}
+                disabled={isGeneratingDraft}
+              >
                 <ThemedText style={styles.secondaryButtonText}>
-                  Regenerate
+                  {isGeneratingDraft ? "Generating..." : "Regenerate"}
                 </ThemedText>
               </Pressable>
             </View>
