@@ -1,3 +1,5 @@
+import { TaskPriority } from "@/model/Task";
+
 export type StepStatus =
   | "proposed"
   | "approved"
@@ -22,6 +24,7 @@ export default interface PlanStep {
   dependsOnStepIds: string[];
   description?: string;
   estimatedMinutes?: number;
+  priority?: TaskPriority;
   suggestedDueDate?: number;
   createdAt: number;
   updatedAt: number;

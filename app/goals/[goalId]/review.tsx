@@ -8,7 +8,10 @@ import {
 } from "@/lib/formatters/status";
 import {
   buildTaskTitleFromStep,
+  getSuggestedDueDateForStep,
+  getTaskPriorityFromStep,
   getApprovedPlanSteps,
+  hasMaterializedTaskForStep,
 } from "@/lib/plan-materialization";
 import { generateMockPlan } from "@/lib/mock-goal-planner";
 import Goal from "@/model/Goal";
@@ -48,6 +51,8 @@ export default function GoalPlanReviewScreen() {
   );
   const planStepsById = usePlanStore((state) => state.planStepsById);
   const createTask = useTaskStore((state) => state.createTask);
+  const taskOrder = useTaskStore((state) => state.taskOrder);
+  const tasksById = useTaskStore((state) => state.tasksById);
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
@@ -61,6 +66,12 @@ export default function GoalPlanReviewScreen() {
         .map((stepId) => planStepsById[stepId])
         .filter((step): step is PlanStep => Boolean(step))
         .sort((a, b) => a.order - b.order)
+    : [];
+  const existingTasks = goalId
+    ? taskOrder
+        .map((taskId) => tasksById[taskId])
+        .filter((task): task is NonNullable<typeof task> => Boolean(task))
+        .filter((task) => task.goalId === goalId)
     : [];
 
   const handleGenerateDraft = () => {
@@ -88,6 +99,7 @@ export default function GoalPlanReviewScreen() {
         description: step.description,
         order: index + 1,
         estimatedMinutes: step.estimatedMinutes,
+        priority: step.priority,
         status: "proposed",
         approvalState: "pending",
       });
@@ -144,12 +156,16 @@ export default function GoalPlanReviewScreen() {
 
     const approvedSteps = getApprovedPlanSteps(draftSteps);
     approvedSteps.forEach((step) => {
+      if (hasMaterializedTaskForStep(existingTasks, step.id)) {
+        return;
+      }
+
       createTask({
         goalId,
         planStepId: step.id,
         title: buildTaskTitleFromStep(step),
-        dueDate: step.suggestedDueDate,
-        priority: step.order <= 2 ? "high" : "medium",
+        dueDate: getSuggestedDueDateForStep(step, approvedSteps, goal),
+        priority: getTaskPriorityFromStep(step),
       });
     });
 
@@ -285,7 +301,7 @@ export default function GoalPlanReviewScreen() {
                   </ThemedText>
                 ) : null}
                 <ThemedText style={styles.metaText}>
-                  Approval: {formatStepApprovalState(step.approvalState)}
+                  Approval: {formatStepApprovalState(step.approvalState)} · Priority: {step.priority ?? "medium"}
                 </ThemedText>
                 <View style={styles.buttonRow}>
                   {editingStepId === step.id ? (

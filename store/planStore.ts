@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TaskPriority } from "@/model/Task";
 import { nanoid } from "nanoid/non-secure";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -22,6 +23,7 @@ interface CreatePlanStepInput {
   description?: string;
   dependsOnStepIds?: string[];
   estimatedMinutes?: number;
+  priority?: TaskPriority;
   suggestedDueDate?: number;
   status?: StepStatus;
   approvalState?: StepApprovalState;
@@ -151,6 +153,7 @@ export const usePlanStore = create<PlanStore>()(
           description: input.description,
           dependsOnStepIds: input.dependsOnStepIds ?? [],
           estimatedMinutes: input.estimatedMinutes,
+          priority: input.priority ?? "medium",
           suggestedDueDate: input.suggestedDueDate,
           status: input.status ?? "proposed",
           approvalState: input.approvalState ?? "pending",
