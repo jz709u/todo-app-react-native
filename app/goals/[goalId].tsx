@@ -131,6 +131,16 @@ export default function GoalDetailScreen() {
               <ThemedText style={styles.metaRowText}>
                 Version {activePlan.version} · {formatPlanStatus(activePlan.status)}
               </ThemedText>
+              {activePlan.status === "awaiting_approval" ? (
+                <Pressable
+                  style={styles.reviewButton}
+                  onPress={() => router.push(`/goals/${goal.id}/review`)}
+                >
+                  <ThemedText style={styles.reviewButtonText}>
+                    Review Draft Plan
+                  </ThemedText>
+                </Pressable>
+              ) : null}
               {planSteps.length > 0 ? (
                 <View style={styles.listBlock}>
                   {planSteps.map((step) => (
@@ -154,7 +164,19 @@ export default function GoalDetailScreen() {
               )}
             </SectionCard>
           ) : (
-            <EmptySectionCopy text="No plan has been created for this goal yet." />
+            <SectionCard>
+              <ThemedText lightColor={semanticColors.textMuted}>
+                No plan has been created for this goal yet.
+              </ThemedText>
+              <Pressable
+                style={styles.reviewButton}
+                onPress={() => router.push(`/goals/${goal.id}/review`)}
+              >
+                <ThemedText style={styles.reviewButtonText}>
+                  Generate Mock Plan
+                </ThemedText>
+              </Pressable>
+            </SectionCard>
           )}
         </Section>
 
@@ -304,6 +326,17 @@ const styles = StyleSheet.create({
   stepCopy: {
     flex: 1,
     gap: 2,
+  },
+  reviewButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#111827",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  reviewButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
   taskRow: {
     flexDirection: "row",
