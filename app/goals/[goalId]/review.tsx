@@ -7,15 +7,13 @@ import {
   formatStepStatus,
 } from "@/lib/formatters/status";
 import {
-  buildTaskTitleFromStep,
-  getMaterializedTaskForStep,
-  getSuggestedDueDateForStep,
-  getTaskPriorityFromStep,
   getApprovedPlanSteps,
   hasMaterializedTaskForStep,
 } from "@/lib/plan-materialization";
-import { requestPlanDraft } from "@/lib/planner/planDraftService";
-import Goal from "@/model/Goal";
+import {
+  approveDraftPlanForGoal,
+  createDraftPlanForGoal,
+} from "@/lib/planner/planWorkflowService";
 import PlanStep from "@/model/PlanStep";
 import { useGoalStore } from "@/store/goalStore";
 import { usePlanStore } from "@/store/planStore";
@@ -25,34 +23,18 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-function getLatestDraftPlan(goalId: string, planOrder: string[], plansById: Record<string, any>) {
-  return planOrder
-    .map((planId) => plansById[planId])
-    .filter((plan): plan is NonNullable<typeof plan> => Boolean(plan))
-    .filter(
-      (plan) => plan.goalId === goalId && plan.status === "awaiting_approval",
-    )
-    .at(-1);
-}
-
 export default function GoalPlanReviewScreen() {
   const router = useRouter();
   const { goalId } = useLocalSearchParams<{ goalId: string }>();
 
   const goalsById = useGoalStore((state) => state.goalsById);
-  const updateGoal = useGoalStore((state) => state.updateGoal);
   const planOrder = usePlanStore((state) => state.planOrder);
   const plansById = usePlanStore((state) => state.plansById);
-  const createPlan = usePlanStore((state) => state.createPlan);
-  const updatePlan = usePlanStore((state) => state.updatePlan);
-  const createPlanStep = usePlanStore((state) => state.createPlanStep);
   const updatePlanStep = usePlanStore((state) => state.updatePlanStep);
   const planStepOrderByPlanId = usePlanStore(
     (state) => state.planStepOrderByPlanId,
   );
   const planStepsById = usePlanStore((state) => state.planStepsById);
-  const createTask = useTaskStore((state) => state.createTask);
-  const updateTask = useTaskStore((state) => state.updateTask);
   const taskOrder = useTaskStore((state) => state.taskOrder);
   const tasksById = useTaskStore((state) => state.tasksById);
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
@@ -62,7 +44,14 @@ export default function GoalPlanReviewScreen() {
 
   const goal = goalId ? goalsById[goalId] : undefined;
   const draftPlan = goalId
-    ? getLatestDraftPlan(goalId, planOrder, plansById)
+    ? planOrder
+        .map((planId) => plansById[planId])
+        .filter((plan): plan is NonNullable<typeof plan> => Boolean(plan))
+        .filter(
+          (plan) =>
+            plan.goalId === goalId && plan.status === "awaiting_approval",
+        )
+        .at(-1)
     : undefined;
   const draftSteps = draftPlan
     ? (planStepOrderByPlanId[draftPlan.id] ?? [])
@@ -92,34 +81,8 @@ export default function GoalPlanReviewScreen() {
 
     setIsGeneratingDraft(true);
 
-    if (draftPlan) {
-      updatePlan(draftPlan.id, { status: "superseded" });
-    }
-
     try {
-      const generated = await requestPlanDraft(goal);
-      const planId = createPlan({
-        goalId,
-        summary: generated.summary,
-        assumptions: generated.assumptions,
-        risks: generated.risks,
-        status: "awaiting_approval",
-      });
-
-      generated.steps.forEach((step, index) => {
-        createPlanStep({
-          planId,
-          title: step.title,
-          description: step.description,
-          order: index + 1,
-          estimatedMinutes: step.estimatedMinutes,
-          priority: step.priority,
-          status: "proposed",
-          approvalState: "pending",
-        });
-      });
-
-      updateGoal(goalId, { status: "planning" });
+      await createDraftPlanForGoal(goalId);
     } finally {
       setIsGeneratingDraft(false);
     }
@@ -167,38 +130,11 @@ export default function GoalPlanReviewScreen() {
   };
 
   const handleApprovePlan = () => {
-    if (!goal || !goalId || !draftPlan) {
+    if (!goalId || !draftPlan) {
       return;
     }
 
-    approvedSteps.forEach((step) => {
-      const dueDate = getSuggestedDueDateForStep(step, approvedSteps, goal);
-      const priority = getTaskPriorityFromStep(step);
-      const existingTask = getMaterializedTaskForStep(existingTasks, step.id);
-
-      if (existingTask) {
-        updateTask(existingTask.id, {
-          title: buildTaskTitleFromStep(step),
-          dueDate,
-          priority,
-        });
-        return;
-      }
-
-      createTask({
-        goalId,
-        planStepId: step.id,
-        title: buildTaskTitleFromStep(step),
-        dueDate,
-        priority,
-      });
-    });
-
-    updatePlan(draftPlan.id, { status: "approved" });
-    updateGoal(goalId, {
-      activePlanId: draftPlan.id,
-      status: approvedSteps.length > 0 ? "active" : "draft",
-    });
+    approveDraftPlanForGoal(goalId);
     router.replace(`/goals/${goalId}`);
   };
 

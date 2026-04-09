@@ -3,6 +3,7 @@ import { ThemedText } from "@/components/themed-text.component";
 import { semanticColors } from "@/constants/theme";
 import { formatLongDate } from "@/lib/formatters/date";
 import { formatGoalStatus } from "@/lib/formatters/status";
+import { selectGoals } from "@/lib/selectors/goalSelectors";
 import Goal from "@/model/Goal";
 import { useGoalStore } from "@/store/goalStore";
 import { useRouter } from "expo-router";
@@ -19,9 +20,7 @@ export default function GoalsScreen() {
   const router = useRouter();
   const goalOrder = useGoalStore((state) => state.goalOrder);
   const goalsById = useGoalStore((state) => state.goalsById);
-  const goals = goalOrder
-    .map((goalId) => goalsById[goalId])
-    .filter((goal): goal is Goal => Boolean(goal));
+  const goals = selectGoals(goalOrder, goalsById);
 
   return (
     <SafeAreaView style={styles.container}>

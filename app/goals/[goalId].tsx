@@ -10,7 +10,12 @@ import {
   formatTaskPriority,
   formatTaskStatus,
 } from "@/lib/formatters/status";
-import Goal from "@/model/Goal";
+import {
+  selectGoalProgress,
+  selectPlansByGoalId,
+  selectPlanSteps,
+  selectTasksByGoalId,
+} from "@/lib/selectors/goalSelectors";
 import Task from "@/model/Task";
 import { useGoalStore } from "@/store/goalStore";
 import { usePlanStore } from "@/store/planStore";
@@ -34,29 +39,18 @@ export default function GoalDetailScreen() {
   const tasksById = useTaskStore((state) => state.tasksById);
 
   const goal = goalId ? goalsById[goalId] : undefined;
-  const plans = goalId
-    ? planOrder
-        .map((planId) => plansById[planId])
-        .filter((plan): plan is NonNullable<typeof plan> => Boolean(plan))
-        .filter((plan) => plan.goalId === goalId)
-    : [];
-  const tasks = goalId
-    ? taskOrder
-        .map((taskId) => tasksById[taskId])
-        .filter((task): task is Task => Boolean(task))
-        .filter((task) => task.goalId === goalId)
-    : [];
+  const plans = goalId ? selectPlansByGoalId(goalId, planOrder, plansById) : [];
+  const tasks = goalId ? selectTasksByGoalId(goalId, taskOrder, tasksById) : [];
 
   const activePlan = goal?.activePlanId
     ? plans.find((plan) => plan.id === goal.activePlanId)
     : plans[plans.length - 1];
-  const planSteps = activePlan
-    ? (planStepOrderByPlanId[activePlan.id] ?? [])
-        .map((stepId) => planStepsById[stepId])
-        .filter((step): step is NonNullable<typeof step> => Boolean(step))
-        .sort((a, b) => a.order - b.order)
-    : [];
-  const completedTaskCount = tasks.filter((task) => task.status === "done").length;
+  const planSteps = selectPlanSteps(
+    activePlan?.id,
+    planStepOrderByPlanId,
+    planStepsById,
+  );
+  const { completedTaskCount, totalTaskCount } = selectGoalProgress(tasks);
 
   if (!goal) {
     return (
@@ -97,7 +91,7 @@ export default function GoalDetailScreen() {
         <View style={styles.statsRow}>
           <StatCard label="Plans" value={String(plans.length)} />
           <StatCard label="Steps" value={String(planSteps.length)} />
-          <StatCard label="Done tasks" value={`${completedTaskCount}/${tasks.length}`} />
+          <StatCard label="Done tasks" value={`${completedTaskCount}/${totalTaskCount}`} />
         </View>
 
         <Section title="Constraints">
