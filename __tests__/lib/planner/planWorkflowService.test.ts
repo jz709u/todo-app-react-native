@@ -1,11 +1,15 @@
 import Goal from "@/model/Goal";
 import { createDraftPlanForGoal, approveDraftPlanForGoal } from "@/lib/planner/planWorkflowService";
+import { supabase } from "@/lib/supabase";
 import { useGoalStore } from "@/store/goalStore";
 import { usePlanStore } from "@/store/planStore";
 import { useTaskStore } from "@/store/taskStore";
 
+const mockSupabase = supabase as jest.Mocked<typeof supabase>;
+
 describe("planWorkflowService", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     useGoalStore.setState({
       goalsById: {},
       goalOrder: [],
@@ -19,6 +23,28 @@ describe("planWorkflowService", () => {
     useTaskStore.setState({
       tasksById: {},
       taskOrder: [],
+    });
+    (mockSupabase.functions.invoke as jest.Mock).mockResolvedValue({
+      data: {
+        summary: "Generated draft",
+        assumptions: [],
+        risks: [],
+        steps: [
+          {
+            title: "Step 1",
+            description: "Desc",
+            estimatedMinutes: 30,
+            priority: "high",
+          },
+          {
+            title: "Step 2",
+            description: "Desc 2",
+            estimatedMinutes: 45,
+            priority: "medium",
+          },
+        ],
+      },
+      error: null,
     });
   });
 

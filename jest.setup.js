@@ -70,6 +70,9 @@ jest.mock("@supabase/supabase-js", () => ({
       signInAnonymously: jest.fn(),
     },
     from: jest.fn(),
+    functions: {
+      invoke: jest.fn(),
+    },
   })),
 }));
 
@@ -82,4 +85,3 @@ jest.mock("expo-symbols", () => ({
 jest.mock("react-native-safe-area-context", () => ({
   SafeAreaView: ({ children }) => children,
 }));
-

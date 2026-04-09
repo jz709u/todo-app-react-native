@@ -41,6 +41,7 @@ export default function GoalPlanReviewScreen() {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const goal = goalId ? goalsById[goalId] : undefined;
   const draftPlan = goalId
@@ -80,9 +81,16 @@ export default function GoalPlanReviewScreen() {
     }
 
     setIsGeneratingDraft(true);
+    setGenerationError(null);
 
     try {
       await createDraftPlanForGoal(goalId);
+    } catch (error) {
+      setGenerationError(
+        error instanceof Error
+          ? error.message
+          : "Failed to generate the plan draft.",
+      );
     } finally {
       setIsGeneratingDraft(false);
     }
@@ -178,9 +186,11 @@ export default function GoalPlanReviewScreen() {
           <SectionCard style={styles.emptyCard}>
             <ThemedText type="subheading">Create a mock plan draft</ThemedText>
             <ThemedText lightColor={semanticColors.textMuted}>
-              This local-only flow generates a reviewable draft plan so you can
-              validate the UX before backend AI integration.
+              Generate a reviewable plan draft for this goal.
             </ThemedText>
+            {generationError ? (
+              <ThemedText style={styles.errorText}>{generationError}</ThemedText>
+            ) : null}
             <Pressable
               style={styles.primaryButton}
               onPress={() => void handleGenerateDraft()}
@@ -218,6 +228,9 @@ export default function GoalPlanReviewScreen() {
                 ? "Approve at least one step to create or update tasks."
                 : `${approvedStepCount} approved step${approvedStepCount === 1 ? "" : "s"} ready · ${newTaskCount} new task${newTaskCount === 1 ? "" : "s"} · ${updatedTaskCount} updated`}
             </ThemedText>
+            {generationError ? (
+              <ThemedText style={styles.errorText}>{generationError}</ThemedText>
+            ) : null}
           </SectionCard>
 
           <SectionCard>
@@ -393,6 +406,10 @@ const styles = StyleSheet.create({
   },
   metaText: {
     color: semanticColors.textMuted,
+    fontSize: 13,
+  },
+  errorText: {
+    color: "#B42318",
     fontSize: 13,
   },
   stepTopRow: {
