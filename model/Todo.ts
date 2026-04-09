@@ -1,3 +1,6 @@
+import { Priority } from "@/components/priority-selector.component";
+import { RecurrenceType } from "@/components/recurrence-selector.component";
+
 export default interface Todo {
   id: string;
   text: string;
@@ -8,11 +11,11 @@ export default interface Todo {
   dueDate?: number; // Unix timestamp for due date
 
   // Phase 1: Priority
-  priority?: 'low' | 'medium' | 'high';
+  priority?: Priority;
 
   // Phase 1: Recurring Tasks
   recurrence?: {
-    type: 'daily' | 'weekly' | 'monthly' | null;
+    type: RecurrenceType | null;
     endDate?: number; // Optional end date for recurrence
   };
 

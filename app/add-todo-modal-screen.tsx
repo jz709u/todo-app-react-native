@@ -1,5 +1,8 @@
 import { DueDatePicker } from "@/components/due-date-picker.component";
-import { PrioritySelector } from "@/components/priority-selector.component";
+import OptionSelector from "@/components/option-selector.component";
+import { Priority } from "@/components/priority-selector.component";
+import { RecurrenceType } from "@/components/recurrence-selector.component";
+import SelectorPicker from "@/components/themed-selector-picker.component";
 import { ThemedText } from "@/components/themed-text.component";
 import { useTodoStore } from "@/store/todoStore";
 import { useRouter } from "expo-router";
@@ -20,10 +23,11 @@ export default function AddTodoModal() {
   const [text, setText] = useState("");
   const [selectedDueDate, setSelectedDueDate] = useState<number>();
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [priority, setPriority] = useState<Priority>("medium");
+  const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
 
   const formatDueDate = (timestamp?: number) => {
-    if (!timestamp) return "No date";
+    if (!timestamp) return undefined;
     const date = new Date(timestamp);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -45,6 +49,11 @@ export default function AddTodoModal() {
     if (text.trim()) {
       addTodo(text, {
         dueDate: selectedDueDate,
+        priority: priority,
+        recurrence:
+          recurrence === "none"
+            ? undefined
+            : { type: recurrence, endDate: undefined },
       });
       router.dismiss();
     }
@@ -73,9 +82,9 @@ export default function AddTodoModal() {
         </Pressable>
       </View>
 
-      <ScrollView style={styles.form}>
-        <View style={styles.section}>
-          <ThemedText style={styles.label}>What do you want to do?</ThemedText>
+      <ScrollView style={styles.form} contentContainerStyle={{ gap: 24 }}>
+        <View style={{ gap: 8 }}>
+          <ThemedText type="subheading">What do you want to do?</ThemedText>
           <TextInput
             style={styles.input}
             placeholder="Enter todo..."
@@ -85,45 +94,38 @@ export default function AddTodoModal() {
             multiline
           />
         </View>
+        <OptionSelector<Priority>
+          name="Priority"
+          options={["low", "medium", "high"]}
+          value={priority}
+          onValueChange={(value) => setPriority(value)}
+        />
 
-        <View style={styles.section}>
-          <ThemedText style={styles.label}>Due Date</ThemedText>
-          <Pressable
-            style={styles.dateButton}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <ThemedText style={styles.dateButtonText}>
-              📅 {formatDueDate(selectedDueDate)}
-            </ThemedText>
-            {selectedDueDate && (
-              <Pressable
-                onPress={() => setSelectedDueDate(undefined)}
-                style={styles.removeDateButton}
-              >
-                <ThemedText style={styles.removeDateText}>✕</ThemedText>
-              </Pressable>
-            )}
-          </Pressable>
-        </View>
+        <OptionSelector<RecurrenceType>
+          name="Recurrence"
+          options={["none", "daily", "weekly", "monthly"]}
+          value={recurrence}
+          onValueChange={(value) => setRecurrence(value)}
+        />
+
+        <SelectorPicker
+          title="Due Date"
+          value={formatDueDate(selectedDueDate)}
+          noValueText="No Date"
+          onPress={() => setShowDatePicker(true)}
+          removePressed={() => setSelectedDueDate(undefined)}
+        />
+
+        <DueDatePicker
+          visible={showDatePicker}
+          onClose={() => setShowDatePicker(false)}
+          onSelect={(date) => {
+            setSelectedDueDate(date);
+            setShowDatePicker(false);
+          }}
+          selectedDate={selectedDueDate}
+        />
       </ScrollView>
-
-      <DueDatePicker
-        visible={showDatePicker}
-        onClose={() => setShowDatePicker(false)}
-        onSelect={(date) => {
-          setSelectedDueDate(date);
-          setShowDatePicker(false);
-        }}
-        selectedDate={selectedDueDate}
-      />
-
-      <PrioritySelector
-        style={{ marginBottom: 16, paddingHorizontal: 16 }}
-        value={priority}
-        onValueChange={(priority) => {
-          setPriority(priority);
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -161,11 +163,10 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    gap: 16,
+    //padding: 16,
   },
   label: {
     fontSize: 14,

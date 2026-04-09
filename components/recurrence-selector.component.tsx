@@ -3,7 +3,7 @@ import React from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "./themed-text.component";
 
-export type RecurrenceType = "daily" | "weekly" | "monthly" | null;
+export type RecurrenceType = "daily" | "weekly" | "monthly" | "none";
 
 export type RecurrenceSelectorProps = {
   visible: boolean;
@@ -13,7 +13,7 @@ export type RecurrenceSelectorProps = {
 };
 
 const RECURRENCE_OPTIONS = [
-  { label: "No Recurrence", value: null as RecurrenceType },
+  { label: "No Recurrence", value: "none" as RecurrenceType },
   { label: "Daily", value: "daily" as RecurrenceType },
   { label: "Weekly", value: "weekly" as RecurrenceType },
   { label: "Monthly", value: "monthly" as RecurrenceType },

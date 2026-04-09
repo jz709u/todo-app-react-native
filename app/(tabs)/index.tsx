@@ -6,6 +6,14 @@ import { FlatList, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  return (
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#fff" }}>
+      <TodoListView />
+    </SafeAreaView>
+  );
+}
+
+function TodoListView() {
   const { todos, toggleCompleted, initializeUser, isLoading, isSyncing } =
     useTodoStore();
 
@@ -13,49 +21,63 @@ export default function HomeScreen() {
     initializeUser();
   }, []);
 
+  const streak = todos.reduce((maxStreak, todo) => {
+    if (todo.isCompleted) {
+      return maxStreak + 1;
+    }
+    return 0;
+  }, 0);
+
+  const streakColor = streak >= 5 ? "#3C88DF" : "#E8E8E8";
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={{ padding: 16, gap: 16, flexDirection: "column", flex: 1 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
-            Todo App
+    <View
+      style={{
+        paddingHorizontal: 16,
+        gap: 16,
+        flexDirection: "column",
+        flex: 1,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
+          Todo App
+        </ThemedText>
+        {isSyncing && (
+          <ThemedText style={{ fontSize: 12, color: "#666" }}>
+            Syncing...
           </ThemedText>
-          {isSyncing && (
-            <ThemedText style={{ fontSize: 12, color: "#666" }}>
-              Syncing...
-            </ThemedText>
-          )}
-        </View>
-        {isLoading ? (
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <ThemedText>Loading...</ThemedText>
-          </View>
-        ) : (
-          <FlatList
-            ListEmptyComponent={<EmptyTodoView />}
-            contentContainerStyle={{ flexGrow: 1 }}
-            data={todos}
-            renderItem={({ item: todo, index }) => (
-              <ThemedTodoRowView
-                text={todo.text}
-                isCompleted={todo.isCompleted}
-                priority={todo.priority}
-                dueDate={todo.dueDate}
-                toggleCompleted={() => toggleCompleted(index)}
-              />
-            )}
-          />
         )}
       </View>
-    </SafeAreaView>
+      {isLoading ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ThemedText>Loading...</ThemedText>
+        </View>
+      ) : (
+        <FlatList
+          ListEmptyComponent={<EmptyTodoView />}
+          contentContainerStyle={{ flexGrow: 1 }}
+          data={todos}
+          renderItem={({ item: todo, index }) => (
+            <ThemedTodoRowView
+              text={todo.text}
+              isCompleted={todo.isCompleted}
+              priority={todo.priority}
+              dueDate={todo.dueDate}
+              toggleCompleted={() => toggleCompleted(index)}
+            />
+          )}
+        />
+      )}
+    </View>
   );
 }
 

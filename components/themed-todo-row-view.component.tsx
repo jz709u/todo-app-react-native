@@ -3,6 +3,7 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { SFSymbol, SymbolView } from "expo-symbols";
+import { Priority } from "./priority-selector.component";
 import { ThemedText } from "./themed-text.component";
 import { ThemedViewProps } from "./themed-view.component";
 
@@ -10,11 +11,11 @@ export type ThemedTodoRowViewProps = ThemedViewProps & {
   text: string;
   isCompleted: boolean;
   toggleCompleted: () => void;
-  priority?: "low" | "medium" | "high";
+  priority?: Priority;
   dueDate?: number;
 };
 
-const PRIORITY_COLORS: Record<"low" | "medium" | "high", string> = {
+const PRIORITY_COLORS: Record<Priority, string> = {
   low: "#FFD700",
   medium: "#FFA500",
   high: "#FF6B6B",

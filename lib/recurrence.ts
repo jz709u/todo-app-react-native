@@ -1,3 +1,4 @@
+import { RecurrenceType } from "@/components/recurrence-selector.component";
 import Todo from "@/model/Todo";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -45,7 +46,7 @@ export function expandRecurringTasks(
 
 function getNextRecurrenceDate(
   currentDate: number,
-  type: "daily" | "weekly" | "monthly",
+  type: RecurrenceType,
 ): number {
   const date = new Date(currentDate);
 

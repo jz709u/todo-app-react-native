@@ -2,9 +2,11 @@ import React from "react";
 import { Pressable, StyleSheet, View, ViewProps } from "react-native";
 import { ThemedText } from "./themed-text.component";
 
+export type Priority = "low" | "medium" | "high";
+
 export type PrioritySelectorProps = {
-  value: "low" | "medium" | "high";
-  onValueChange: (value: "low" | "medium" | "high") => void;
+  value: Priority;
+  onValueChange: (value: Priority) => void;
 } & ViewProps;
 
 const PRIORITIES = [

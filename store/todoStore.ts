@@ -1,3 +1,5 @@
+import { Priority } from "@/components/priority-selector.component";
+import { RecurrenceType } from "@/components/recurrence-selector.component";
 import { syncTodos } from "@/lib/api";
 import { expandRecurringTasks } from "@/lib/recurrence";
 import { supabase } from "@/lib/supabase";
@@ -20,10 +22,10 @@ interface TodoStore {
     text: string,
     options?: {
       dueDate?: number;
-      priority?: "low" | "medium" | "high";
+      priority?: Priority;
       isHabit?: boolean;
       recurrence?: {
-        type: "daily" | "weekly" | "monthly" | null;
+        type: RecurrenceType | null;
         endDate?: number;
       };
     },
@@ -37,7 +39,7 @@ interface TodoStore {
   getUpcomingTodos: (days?: number) => Todo[];
 
   // Priority filtering
-  filterByPriority: (priority: "low" | "medium" | "high") => Todo[];
+  filterByPriority: (priority: Priority) => Todo[];
 
   // Habit tracking
   getHabits: () => Todo[];
@@ -189,7 +191,7 @@ export const useTodoStore = create<TodoStore>()(
           });
       },
 
-      filterByPriority: (priority: "low" | "medium" | "high") => {
+      filterByPriority: (priority: Priority) => {
         return get().todos.filter(
           (todo) => (todo.priority || "medium") === priority,
         );
