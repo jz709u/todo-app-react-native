@@ -1,5 +1,6 @@
 import {
   buildTaskTitleFromStep,
+  getMaterializedTaskForStep,
   getApprovedPlanSteps,
   getSuggestedDueDateForStep,
   getTaskPriorityFromStep,
@@ -101,5 +102,7 @@ describe("plan materialization helpers", () => {
     );
     expect(hasMaterializedTaskForStep(existingTasks, "1")).toBe(true);
     expect(hasMaterializedTaskForStep(existingTasks, "2")).toBe(false);
+    expect(getMaterializedTaskForStep(existingTasks, "1")?.id).toBe("task-1");
+    expect(getMaterializedTaskForStep(existingTasks, "2")).toBeUndefined();
   });
 });

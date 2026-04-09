@@ -8,6 +8,7 @@ import {
 } from "@/lib/formatters/status";
 import {
   buildTaskTitleFromStep,
+  getMaterializedTaskForStep,
   getSuggestedDueDateForStep,
   getTaskPriorityFromStep,
   getApprovedPlanSteps,
@@ -51,6 +52,7 @@ export default function GoalPlanReviewScreen() {
   );
   const planStepsById = usePlanStore((state) => state.planStepsById);
   const createTask = useTaskStore((state) => state.createTask);
+  const updateTask = useTaskStore((state) => state.updateTask);
   const taskOrder = useTaskStore((state) => state.taskOrder);
   const tasksById = useTaskStore((state) => state.tasksById);
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
@@ -73,6 +75,14 @@ export default function GoalPlanReviewScreen() {
         .filter((task): task is NonNullable<typeof task> => Boolean(task))
         .filter((task) => task.goalId === goalId)
     : [];
+  const approvedSteps = getApprovedPlanSteps(draftSteps);
+  const approvedStepCount = approvedSteps.length;
+  const newTaskCount = approvedSteps.filter(
+    (step) => !hasMaterializedTaskForStep(existingTasks, step.id),
+  ).length;
+  const updatedTaskCount = approvedSteps.filter((step) =>
+    hasMaterializedTaskForStep(existingTasks, step.id),
+  ).length;
 
   const handleGenerateDraft = () => {
     if (!goalId || !goal) {
@@ -154,9 +164,17 @@ export default function GoalPlanReviewScreen() {
       return;
     }
 
-    const approvedSteps = getApprovedPlanSteps(draftSteps);
     approvedSteps.forEach((step) => {
-      if (hasMaterializedTaskForStep(existingTasks, step.id)) {
+      const dueDate = getSuggestedDueDateForStep(step, approvedSteps, goal);
+      const priority = getTaskPriorityFromStep(step);
+      const existingTask = getMaterializedTaskForStep(existingTasks, step.id);
+
+      if (existingTask) {
+        updateTask(existingTask.id, {
+          title: buildTaskTitleFromStep(step),
+          dueDate,
+          priority,
+        });
         return;
       }
 
@@ -164,8 +182,8 @@ export default function GoalPlanReviewScreen() {
         goalId,
         planStepId: step.id,
         title: buildTaskTitleFromStep(step),
-        dueDate: getSuggestedDueDateForStep(step, approvedSteps, goal),
-        priority: getTaskPriorityFromStep(step),
+        dueDate,
+        priority,
       });
     });
 
@@ -197,13 +215,14 @@ export default function GoalPlanReviewScreen() {
         </Pressable>
         <ThemedText type="subheading">Plan Review</ThemedText>
         <Pressable
-          disabled={!draftPlan}
+          disabled={!draftPlan || approvedStepCount === 0}
           onPress={handleApprovePlan}
         >
           <ThemedText
             style={[
               styles.headerAction,
-              !draftPlan && styles.headerActionDisabled,
+              (!draftPlan || approvedStepCount === 0) &&
+                styles.headerActionDisabled,
             ]}
           >
             Approve
@@ -243,6 +262,11 @@ export default function GoalPlanReviewScreen() {
                 </ThemedText>
               </Pressable>
             </View>
+            <ThemedText style={styles.metaText}>
+              {approvedStepCount === 0
+                ? "Approve at least one step to create or update tasks."
+                : `${approvedStepCount} approved step${approvedStepCount === 1 ? "" : "s"} ready · ${newTaskCount} new task${newTaskCount === 1 ? "" : "s"} · ${updatedTaskCount} updated`}
+            </ThemedText>
           </SectionCard>
 
           <SectionCard>

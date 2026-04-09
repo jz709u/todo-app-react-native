@@ -44,3 +44,10 @@ export function hasMaterializedTaskForStep(
 ) {
   return existingTasks.some((task) => task.planStepId === planStepId);
 }
+
+export function getMaterializedTaskForStep(
+  existingTasks: Task[],
+  planStepId: string,
+) {
+  return existingTasks.find((task) => task.planStepId === planStepId);
+}
