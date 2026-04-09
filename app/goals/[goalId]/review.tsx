@@ -17,8 +17,8 @@ import { useGoalStore } from "@/store/goalStore";
 import { usePlanStore } from "@/store/planStore";
 import { useTaskStore } from "@/store/taskStore";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 function getLatestDraftPlan(goalId: string, planOrder: string[], plansById: Record<string, any>) {
@@ -48,6 +48,9 @@ export default function GoalPlanReviewScreen() {
   );
   const planStepsById = usePlanStore((state) => state.planStepsById);
   const createTask = useTaskStore((state) => state.createTask);
+  const [editingStepId, setEditingStepId] = useState<string | null>(null);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
 
   const goal = goalId ? goalsById[goalId] : undefined;
   const draftPlan = goalId
@@ -63,6 +66,10 @@ export default function GoalPlanReviewScreen() {
   const handleGenerateDraft = () => {
     if (!goalId || !goal) {
       return;
+    }
+
+    if (draftPlan) {
+      updatePlan(draftPlan.id, { status: "superseded" });
     }
 
     const generated = generateMockPlan(goal);
@@ -87,6 +94,33 @@ export default function GoalPlanReviewScreen() {
     });
 
     updateGoal(goalId, { status: "planning" });
+  };
+
+  const handleStartEditing = (step: PlanStep) => {
+    setEditingStepId(step.id);
+    setEditedTitle(step.title);
+    setEditedDescription(step.description ?? "");
+  };
+
+  const handleCancelEditing = () => {
+    setEditingStepId(null);
+    setEditedTitle("");
+    setEditedDescription("");
+  };
+
+  const handleSaveStepEdit = (step: PlanStep) => {
+    const nextTitle = editedTitle.trim();
+    if (!nextTitle) {
+      return;
+    }
+
+    updatePlanStep(step.id, {
+      title: nextTitle,
+      description: editedDescription.trim() || undefined,
+      status: "approved",
+      approvalState: "edited",
+    });
+    handleCancelEditing();
   };
 
   const handleApproveStep = (stepId: string) => {
@@ -183,9 +217,16 @@ export default function GoalPlanReviewScreen() {
             <ThemedText lightColor={semanticColors.textMuted}>
               {draftPlan.summary}
             </ThemedText>
-            <ThemedText style={styles.metaText}>
-              Status: {formatPlanStatus(draftPlan.status)}
-            </ThemedText>
+            <View style={styles.summaryRow}>
+              <ThemedText style={styles.metaText}>
+                Status: {formatPlanStatus(draftPlan.status)}
+              </ThemedText>
+              <Pressable onPress={handleGenerateDraft} style={styles.secondaryButton}>
+                <ThemedText style={styles.secondaryButtonText}>
+                  Regenerate
+                </ThemedText>
+              </Pressable>
+            </View>
           </SectionCard>
 
           <SectionCard>
@@ -211,12 +252,34 @@ export default function GoalPlanReviewScreen() {
             {draftSteps.map((step) => (
               <SectionCard key={step.id}>
                 <View style={styles.stepTopRow}>
-                  <ThemedText type="subheading">{step.order}. {step.title}</ThemedText>
+                  {editingStepId === step.id ? (
+                    <View style={styles.editForm}>
+                      <TextInput
+                        value={editedTitle}
+                        onChangeText={setEditedTitle}
+                        placeholder="Step title"
+                        placeholderTextColor="#98A2B3"
+                        style={styles.input}
+                      />
+                      <TextInput
+                        value={editedDescription}
+                        onChangeText={setEditedDescription}
+                        placeholder="Step description"
+                        placeholderTextColor="#98A2B3"
+                        style={[styles.input, styles.descriptionInput]}
+                        multiline
+                      />
+                    </View>
+                  ) : (
+                    <ThemedText type="subheading">
+                      {step.order}. {step.title}
+                    </ThemedText>
+                  )}
                   <ThemedText style={styles.metaText}>
                     {formatStepStatus(step.status)}
                   </ThemedText>
                 </View>
-                {step.description ? (
+                {editingStepId !== step.id && step.description ? (
                   <ThemedText lightColor={semanticColors.textMuted}>
                     {step.description}
                   </ThemedText>
@@ -225,22 +288,53 @@ export default function GoalPlanReviewScreen() {
                   Approval: {formatStepApprovalState(step.approvalState)}
                 </ThemedText>
                 <View style={styles.buttonRow}>
-                  <Pressable
-                    style={styles.approveButton}
-                    onPress={() => handleApproveStep(step.id)}
-                  >
-                    <ThemedText style={styles.approveButtonText}>
-                      Approve Step
-                    </ThemedText>
-                  </Pressable>
-                  <Pressable
-                    style={styles.rejectButton}
-                    onPress={() => handleRejectStep(step.id)}
-                  >
-                    <ThemedText style={styles.rejectButtonText}>
-                      Reject
-                    </ThemedText>
-                  </Pressable>
+                  {editingStepId === step.id ? (
+                    <>
+                      <Pressable
+                        style={styles.approveButton}
+                        onPress={() => handleSaveStepEdit(step)}
+                      >
+                        <ThemedText style={styles.approveButtonText}>
+                          Save Edit
+                        </ThemedText>
+                      </Pressable>
+                      <Pressable
+                        style={styles.neutralButton}
+                        onPress={handleCancelEditing}
+                      >
+                        <ThemedText style={styles.neutralButtonText}>
+                          Cancel
+                        </ThemedText>
+                      </Pressable>
+                    </>
+                  ) : (
+                    <>
+                      <Pressable
+                        style={styles.approveButton}
+                        onPress={() => handleApproveStep(step.id)}
+                      >
+                        <ThemedText style={styles.approveButtonText}>
+                          Approve Step
+                        </ThemedText>
+                      </Pressable>
+                      <Pressable
+                        style={styles.secondaryButton}
+                        onPress={() => handleStartEditing(step)}
+                      >
+                        <ThemedText style={styles.secondaryButtonText}>
+                          Edit
+                        </ThemedText>
+                      </Pressable>
+                      <Pressable
+                        style={styles.rejectButton}
+                        onPress={() => handleRejectStep(step.id)}
+                      >
+                        <ThemedText style={styles.rejectButtonText}>
+                          Reject
+                        </ThemedText>
+                      </Pressable>
+                    </>
+                  )}
                 </View>
               </SectionCard>
             ))}
@@ -297,6 +391,12 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingBottom: 32,
   },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
   section: {
     gap: 10,
   },
@@ -307,9 +407,26 @@ const styles = StyleSheet.create({
   stepTopRow: {
     gap: 8,
   },
+  editForm: {
+    gap: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: semanticColors.borderSubtle,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: semanticColors.surface,
+    fontSize: 16,
+  },
+  descriptionInput: {
+    minHeight: 90,
+    textAlignVertical: "top",
+  },
   buttonRow: {
     flexDirection: "row",
     gap: 10,
+    flexWrap: "wrap",
   },
   approveButton: {
     backgroundColor: "#0F766E",
@@ -329,6 +446,26 @@ const styles = StyleSheet.create({
   },
   rejectButtonText: {
     color: "#B42318",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    backgroundColor: "#E5E7EB",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  secondaryButtonText: {
+    color: "#111827",
+    fontWeight: "600",
+  },
+  neutralButton: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  neutralButtonText: {
+    color: "#475467",
     fontWeight: "600",
   },
 });
