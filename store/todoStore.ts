@@ -29,10 +29,10 @@ interface TodoStore {
         endDate?: number;
       };
     },
-  ) => void;
-  toggleCompleted: (index: number) => void;
-  removeTodo: (index: number) => void;
-  updateTodo: (index: number, updates: Partial<Todo>) => void;
+  ) => string;
+  toggleCompleted: (todoId: string) => void;
+  removeTodo: (todoId: string) => void;
+  updateTodo: (todoId: string, updates: Partial<Todo>) => void;
 
   // Due date filtering
   getTodosByDate: (timestamp: number) => Todo[];
@@ -43,7 +43,7 @@ interface TodoStore {
 
   // Habit tracking
   getHabits: () => Todo[];
-  updateHabitStreak: (index: number) => void;
+  updateHabitStreak: (todoId: string) => void;
 
   syncTodos: () => Promise<void>;
   startPeriodicSync: () => void;
@@ -99,9 +99,11 @@ export const useTodoStore = create<TodoStore>()(
       },
 
       addTodo: (text: string, options = {}) => {
+        const todoId = nanoid();
+
         set((state) => {
           const newTodo: Todo = {
-            id: nanoid(),
+            id: todoId,
             text,
             isCompleted: false,
             updatedAt: Date.now(),
@@ -116,12 +118,14 @@ export const useTodoStore = create<TodoStore>()(
             todos: [...state.todos, newTodo],
           };
         });
+
+        return todoId;
       },
 
-      toggleCompleted: (index: number) => {
+      toggleCompleted: (todoId: string) => {
         set((state) => ({
-          todos: state.todos.map((todo, i) =>
-            i === index
+          todos: state.todos.map((todo) =>
+            todo.id === todoId
               ? {
                   ...todo,
                   isCompleted: !todo.isCompleted,
@@ -139,16 +143,18 @@ export const useTodoStore = create<TodoStore>()(
         }));
       },
 
-      removeTodo: (index: number) => {
+      removeTodo: (todoId: string) => {
         set((state) => ({
-          todos: state.todos.filter((_, i) => i !== index),
+          todos: state.todos.filter((todo) => todo.id !== todoId),
         }));
       },
 
-      updateTodo: (index: number, updates: Partial<Todo>) => {
+      updateTodo: (todoId: string, updates: Partial<Todo>) => {
         set((state) => ({
-          todos: state.todos.map((todo, i) =>
-            i === index ? { ...todo, ...updates, updatedAt: Date.now() } : todo,
+          todos: state.todos.map((todo) =>
+            todo.id === todoId
+              ? { ...todo, ...updates, updatedAt: Date.now() }
+              : todo,
           ),
         }));
       },
@@ -201,8 +207,8 @@ export const useTodoStore = create<TodoStore>()(
         return get().todos.filter((todo) => todo.isHabit);
       },
 
-      updateHabitStreak: (index: number) => {
-        get().toggleCompleted(index);
+      updateHabitStreak: (todoId: string) => {
+        get().toggleCompleted(todoId);
       },
 
       syncTodos: async () => {

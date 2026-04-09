@@ -66,13 +66,13 @@ function TodoListView() {
           ListEmptyComponent={<EmptyTodoView />}
           contentContainerStyle={{ flexGrow: 1 }}
           data={todos}
-          renderItem={({ item: todo, index }) => (
+          renderItem={({ item: todo }) => (
             <ThemedTodoRowView
               text={todo.text}
               isCompleted={todo.isCompleted}
               priority={todo.priority}
               dueDate={todo.dueDate}
-              toggleCompleted={() => toggleCompleted(index)}
+              toggleCompleted={() => toggleCompleted(todo.id)}
             />
           )}
         />

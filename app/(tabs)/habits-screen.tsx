@@ -10,9 +10,8 @@ export default function HabitsScreen() {
 
   const habits = todos.filter((todo) => todo.isHabit);
 
-  const habitsWithStats = habits.map((habit, index) => ({
+  const habitsWithStats = habits.map((habit) => ({
     todo: habit,
-    index: todos.indexOf(habit),
     streak: habit.habitStreak || 0,
   }));
 
@@ -56,7 +55,7 @@ export default function HabitsScreen() {
                 <StreakHabitRow
                   todo={item.todo}
                   streak={item.streak}
-                  onToggle={() => toggleCompleted(item.index)}
+                  onToggle={() => toggleCompleted(item.todo.id)}
                 />
               )}
               keyExtractor={(item) => item.todo.id}

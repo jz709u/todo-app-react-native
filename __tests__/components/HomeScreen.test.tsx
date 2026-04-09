@@ -33,7 +33,7 @@ describe("HomeScreen Integration", () => {
     } as any);
 
     // Import after mock setup
-    const HomeScreen = require("@/app/(tabs)/home-screen").default;
+    const HomeScreen = require("@/app/(tabs)/index").default;
     expect(HomeScreen).toBeDefined();
   });
 
@@ -82,13 +82,14 @@ describe("HomeScreen Integration", () => {
 
   it("should have toggleCompleted function", () => {
     const toggleMock = jest.fn();
+    const todoId = "todo-1";
     mockUseTodoStore.mockReturnValue({
       ...mockStoreDefaults,
       toggleCompleted: toggleMock,
     } as any);
 
     const store = mockUseTodoStore();
-    store.toggleCompleted(0);
-    expect(toggleMock).toHaveBeenCalledWith(0);
+    store.toggleCompleted(todoId);
+    expect(toggleMock).toHaveBeenCalledWith(todoId);
   });
 });

@@ -74,13 +74,13 @@ describe("useTodoStore", () => {
       expect(result.current.todos[0].isCompleted).toBe(false);
 
       act(() => {
-        result.current.toggleCompleted(0);
+        result.current.toggleCompleted(result.current.todos[0].id);
       });
 
       expect(result.current.todos[0].isCompleted).toBe(true);
 
       act(() => {
-        result.current.toggleCompleted(0);
+        result.current.toggleCompleted(result.current.todos[0].id);
       });
 
       expect(result.current.todos[0].isCompleted).toBe(false);
@@ -99,7 +99,7 @@ describe("useTodoStore", () => {
       jest.advanceTimersByTime(1);
 
       act(() => {
-        result.current.toggleCompleted(0);
+        result.current.toggleCompleted(result.current.todos[0].id);
       });
 
       const afterToggle = result.current.todos[0].updatedAt || 0;
@@ -121,7 +121,7 @@ describe("useTodoStore", () => {
       expect(result.current.todos).toHaveLength(2);
 
       act(() => {
-        result.current.removeTodo(0);
+        result.current.removeTodo(result.current.todos[0].id);
       });
 
       expect(result.current.todos).toHaveLength(1);
@@ -136,7 +136,7 @@ describe("useTodoStore", () => {
       });
 
       act(() => {
-        result.current.removeTodo(0);
+        result.current.removeTodo(result.current.todos[0].id);
       });
 
       expect(result.current.todos).toHaveLength(0);

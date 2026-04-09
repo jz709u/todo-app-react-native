@@ -110,12 +110,12 @@ export default function CalendarScreen() {
             </ThemedText>
             <FlatList
               data={selectedDateTodos}
-              renderItem={({ item: todo, index: todoIndex }) => {
+              renderItem={({ item: todo }) => {
                 return (
                   <ThemedTodoRowView
                     text={todo.text}
                     isCompleted={todo.isCompleted}
-                    toggleCompleted={() => toggleCompleted(todoIndex)}
+                    toggleCompleted={() => toggleCompleted(todo.id)}
                     priority={todo.priority}
                     dueDate={todo.dueDate}
                   />
