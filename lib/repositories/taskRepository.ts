@@ -1,4 +1,5 @@
 import Task, { TaskPriority, TaskStatus } from "@/model/Task";
+import { getTasks as fetchTasks, syncTasks as pushTasks } from "@/lib/api/tasks";
 import { useTaskStore } from "@/store/taskStore";
 
 interface CreateTaskInput {
@@ -39,4 +40,14 @@ export function getTasks() {
   return taskOrder
     .map((taskId) => tasksById[taskId])
     .filter((task): task is Task => Boolean(task));
+}
+
+export async function syncTaskRepository(goalId: string) {
+  await pushTasks(getTasksByGoalId(goalId));
+}
+
+export async function hydrateTasksFromRemote(goalId: string) {
+  const tasks = await fetchTasks(goalId);
+  tasks.forEach((task) => useTaskStore.getState().upsertTask(task));
+  return tasks;
 }

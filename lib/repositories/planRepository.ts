@@ -1,6 +1,12 @@
 import Plan, { PlanStatus } from "@/model/Plan";
 import PlanStep, { StepApprovalState, StepStatus } from "@/model/PlanStep";
 import { TaskPriority } from "@/model/Task";
+import {
+  getPlans as fetchPlans,
+  getPlanSteps as fetchPlanSteps,
+  syncPlans as pushPlans,
+  syncPlanSteps as pushPlanSteps,
+} from "@/lib/api/plans";
 import { usePlanStore } from "@/store/planStore";
 
 interface CreatePlanInput {
@@ -65,4 +71,30 @@ export function getPlanSteps(planId: string) {
     .map((stepId) => planStepsById[stepId])
     .filter((step): step is PlanStep => Boolean(step))
     .sort((a, b) => a.order - b.order);
+}
+
+export async function syncPlanRepository(goalId: string) {
+  const plans = getPlansByGoalId(goalId);
+  await pushPlans(plans);
+
+  for (const plan of plans) {
+    await pushPlanSteps(getPlanSteps(plan.id));
+  }
+}
+
+export async function hydratePlansFromRemote(goalId: string) {
+  const plans = await fetchPlans(goalId);
+
+  plans.forEach((plan) => {
+    usePlanStore.getState().upsertPlan(plan);
+  });
+
+  for (const plan of plans) {
+    const steps = await fetchPlanSteps(plan.id);
+    steps.forEach((step) => {
+      usePlanStore.getState().upsertPlanStep(step);
+    });
+  }
+
+  return plans;
 }
