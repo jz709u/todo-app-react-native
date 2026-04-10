@@ -26,9 +26,7 @@ function buildMockDraft(goal: Goal) {
         ? "A target date exists and should drive the ordering."
         : "No target date exists yet.",
     ],
-    risks: [
-      "This is still a scaffolded planner implementation.",
-    ],
+    risks: ["This is still a scaffolded planner implementation."],
     steps: [
       {
         title: `Define the success criteria for ${goal.title}`,
@@ -60,13 +58,10 @@ Deno.serve(async (req) => {
   try {
     const { goal } = await req.json();
     if (!goal?.title || !goal?.abstractGoal) {
-      return new Response(
-        JSON.stringify({ error: "Missing goal payload" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+      return new Response(JSON.stringify({ error: "Missing goal payload" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const draft = buildMockDraft(goal as Goal);

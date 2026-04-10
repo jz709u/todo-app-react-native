@@ -1,14 +1,13 @@
 import Goal from "@/model/Goal";
 
 import { generateMockPlan } from "@/lib/mock-goal-planner";
+import { isMockPlannerMode } from "@/lib/planner/config";
 import { isPlanDraft } from "@/lib/planner/planDraftValidation";
 import { PlanDraft } from "@/lib/planner/types";
 import { supabase } from "@/lib/supabase";
 
-const PLANNER_MODE = process.env.EXPO_PUBLIC_PLANNER_MODE;
-
 export async function requestPlanDraft(goal: Goal): Promise<PlanDraft> {
-  if (PLANNER_MODE === "mock") {
+  if (isMockPlannerMode()) {
     return generateMockPlan(goal);
   }
 

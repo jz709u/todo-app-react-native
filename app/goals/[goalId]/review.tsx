@@ -14,6 +14,10 @@ import {
   approveDraftPlanForGoal,
   createDraftPlanForGoal,
 } from "@/lib/planner/planWorkflowService";
+import {
+  getGeneratePlanHeading,
+  getGeneratePlanLabel,
+} from "@/lib/planner/config";
 import PlanStep from "@/model/PlanStep";
 import { TaskPriority } from "@/model/Task";
 import { useGoalStore } from "@/store/goalStore";
@@ -268,7 +272,7 @@ export default function GoalPlanReviewScreen() {
       {!draftPlan ? (
         <View style={styles.centerState}>
           <SectionCard style={styles.emptyCard}>
-            <ThemedText type="subheading">Create a mock plan draft</ThemedText>
+            <ThemedText type="subheading">{getGeneratePlanHeading()}</ThemedText>
             <ThemedText lightColor={semanticColors.textMuted}>
               Generate a reviewable plan draft for this goal.
             </ThemedText>
@@ -281,7 +285,7 @@ export default function GoalPlanReviewScreen() {
               disabled={isGeneratingDraft}
             >
               <ThemedText style={styles.primaryButtonText}>
-                {isGeneratingDraft ? "Generating..." : "Generate Mock Plan"}
+                {isGeneratingDraft ? "Generating..." : getGeneratePlanLabel()}
               </ThemedText>
             </Pressable>
           </SectionCard>

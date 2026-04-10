@@ -10,6 +10,7 @@ import {
   formatTaskPriority,
   formatTaskStatus,
 } from "@/lib/formatters/status";
+import { getGeneratePlanLabel } from "@/lib/planner/config";
 import {
   selectGoalProgress,
   selectPlansByGoalId,
@@ -167,7 +168,7 @@ export default function GoalDetailScreen() {
                 onPress={() => router.push(`/goals/${goal.id}/review`)}
               >
                 <ThemedText style={styles.reviewButtonText}>
-                  Generate Mock Plan
+                  {getGeneratePlanLabel()}
                 </ThemedText>
               </Pressable>
             </SectionCard>

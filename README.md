@@ -16,6 +16,18 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
+3. Configure local environment
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` from your
+   Supabase project.
+
+   Use `EXPO_PUBLIC_PLANNER_MODE=mock` for the local mock planner or any other
+   value to use the Supabase Edge Function.
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
@@ -24,6 +36,16 @@ In the output, you'll find options to open the app in a
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+
+## Planner function
+
+Run the planner Edge Function locally with:
+
+```bash
+npx supabase functions serve request-plan-draft --no-verify-jwt
+```
+
+This requires Docker Desktop to be running.
 
 ## Get a fresh project
 
