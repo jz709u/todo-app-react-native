@@ -1,3 +1,5 @@
+import { describe, expect, jest, it } from "@jest/globals";
+
 jest.mock("@/hooks/use-theme-color", () => ({
   useThemeColor: jest.fn(() => "#ffffff"),
 }));

@@ -1,8 +1,11 @@
-import { requestPlanDraft } from "@/lib/planner/planDraftService";
-import Goal from "@/model/Goal";
-import { supabase } from "@/lib/supabase";
+import { beforeEach, describe, expect, jest, it } from "@jest/globals";
 
-const mockSupabase = supabase as jest.Mocked<typeof supabase>;
+import { requestPlanDraft } from "@/lib/planner/planDraftService";
+import { supabase } from "@/lib/supabase";
+import Goal from "@/model/Goal";
+import type { Mocked } from "jest-mock";
+
+const mockSupabase = supabase as Mocked<typeof supabase>;
 
 const goal: Goal = {
   id: "goal-1",

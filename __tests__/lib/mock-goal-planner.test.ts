@@ -1,3 +1,5 @@
+import { describe, expect, jest, it } from "@jest/globals";
+
 import Goal from "@/model/Goal";
 import { generateMockPlan } from "@/lib/mock-goal-planner";
 
