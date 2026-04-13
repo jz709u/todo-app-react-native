@@ -5,9 +5,10 @@ import { formatLongDate } from "@/lib/formatters/date";
 import { formatGoalStatus } from "@/lib/formatters/status";
 import { selectGoals } from "@/lib/selectors/goalSelectors";
 import Goal from "@/model/Goal";
+import { useGoalDomainStore } from "@/store/goalDomainStore";
 import { useGoalStore } from "@/store/goalStore";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   FlatList,
   Pressable,
@@ -18,9 +19,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function GoalsScreen() {
   const router = useRouter();
+  const initialize = useGoalDomainStore((state) => state.initialize);
+  const error = useGoalDomainStore((state) => state.error);
+  const isInitializing = useGoalDomainStore((state) => state.isInitializing);
+  const isSyncing = useGoalDomainStore((state) => state.isSyncing);
   const goalOrder = useGoalStore((state) => state.goalOrder);
   const goalsById = useGoalStore((state) => state.goalsById);
   const goals = selectGoals(goalOrder, goalsById);
+
+  useEffect(() => {
+    void initialize();
+  }, [initialize]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,6 +48,18 @@ export default function GoalsScreen() {
             <ThemedText style={styles.createButtonText}>New Goal</ThemedText>
           </Pressable>
         </View>
+
+        {isInitializing || isSyncing || error ? (
+          <View style={styles.syncBanner}>
+            <ThemedText style={styles.syncBannerText}>
+              {error
+                ? `Sync issue: ${error}`
+                : isInitializing
+                  ? "Connecting goals workspace..."
+                  : "Syncing goals workspace..."}
+            </ThemedText>
+          </View>
+        ) : null}
 
         <FlatList
           contentContainerStyle={styles.listContent}
@@ -113,6 +134,16 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 12,
+  },
+  syncBanner: {
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "#FEF3C7",
+  },
+  syncBannerText: {
+    color: "#92400E",
+    fontSize: 12,
   },
   headerCopy: {
     gap: 4,

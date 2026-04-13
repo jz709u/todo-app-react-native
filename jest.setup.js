@@ -66,8 +66,19 @@ jest.mock("react-native", () => ({
 jest.mock("@supabase/supabase-js", () => ({
   createClient: jest.fn(() => ({
     auth: {
-      getSession: jest.fn(),
-      signInAnonymously: jest.fn(),
+      getSession: jest.fn(() => Promise.resolve({ data: { session: null } })),
+      signInAnonymously: jest.fn(() =>
+        Promise.resolve({
+          data: {
+            session: {
+              user: {
+                id: "test-user-id",
+              },
+            },
+          },
+          error: null,
+        })
+      ),
     },
     from: jest.fn(),
     functions: {

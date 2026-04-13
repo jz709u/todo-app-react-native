@@ -50,7 +50,9 @@ export default function GoalPlanReviewScreen() {
   const [editedPriority, setEditedPriority] = useState<TaskPriority>("medium");
   const [editedEstimatedMinutes, setEditedEstimatedMinutes] = useState("");
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
+  const [isApprovingPlan, setIsApprovingPlan] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [approvalError, setApprovalError] = useState<string | null>(null);
 
   const goal = goalId ? goalsById[goalId] : undefined;
   const draftPlan = goalId
@@ -230,8 +232,23 @@ export default function GoalPlanReviewScreen() {
       return;
     }
 
-    approveDraftPlanForGoal(goalId);
-    router.replace(`/goals/${goalId}`);
+    setIsApprovingPlan(true);
+    setApprovalError(null);
+
+    void approveDraftPlanForGoal(goalId)
+      .then(() => {
+        router.replace(`/goals/${goalId}`);
+      })
+      .catch((error) => {
+        setApprovalError(
+          error instanceof Error
+            ? error.message
+            : "Failed to approve the plan.",
+        );
+      })
+      .finally(() => {
+        setIsApprovingPlan(false);
+      });
   };
 
   if (!goal) {
@@ -254,17 +271,17 @@ export default function GoalPlanReviewScreen() {
         </Pressable>
         <ThemedText type="subheading">Plan Review</ThemedText>
         <Pressable
-          disabled={!draftPlan || approvedStepCount === 0}
+          disabled={!draftPlan || approvedStepCount === 0 || isApprovingPlan}
           onPress={handleApprovePlan}
         >
           <ThemedText
             style={[
               styles.headerAction,
-              (!draftPlan || approvedStepCount === 0) &&
+              (!draftPlan || approvedStepCount === 0 || isApprovingPlan) &&
                 styles.headerActionDisabled,
             ]}
           >
-            Approve
+            {isApprovingPlan ? "Saving..." : "Approve"}
           </ThemedText>
         </Pressable>
       </View>
@@ -330,6 +347,9 @@ export default function GoalPlanReviewScreen() {
             </ThemedText>
             {generationError ? (
               <ThemedText style={styles.errorText}>{generationError}</ThemedText>
+            ) : null}
+            {approvalError ? (
+              <ThemedText style={styles.errorText}>{approvalError}</ThemedText>
             ) : null}
           </SectionCard>
 

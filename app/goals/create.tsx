@@ -1,5 +1,6 @@
+import { createGoal } from "@/lib/repositories/goalRepository";
+import { useGoalDomainStore } from "@/store/goalDomainStore";
 import { ThemedText } from "@/components/themed-text.component";
-import { useGoalStore } from "@/store/goalStore";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -13,24 +14,38 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CreateGoalScreen() {
   const router = useRouter();
-  const createGoal = useGoalStore((state) => state.createGoal);
+  const syncGoalDomain = useGoalDomainStore((state) => state.syncGoalDomain);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [abstractGoal, setAbstractGoal] = useState("");
   const [notes, setNotes] = useState("");
 
-  const handleCreateGoal = () => {
+  const handleCreateGoal = async () => {
     if (!title.trim() || !abstractGoal.trim()) {
       return;
     }
 
-    const goalId = createGoal({
-      title: title.trim(),
-      abstractGoal: abstractGoal.trim(),
-      constraints: notes.trim() ? { notes: notes.trim() } : undefined,
-      status: "draft",
-    });
+    setIsSaving(true);
+    setSaveError(null);
 
-    router.replace(`/goals/${goalId}`);
+    try {
+      const goalId = createGoal({
+        title: title.trim(),
+        abstractGoal: abstractGoal.trim(),
+        constraints: notes.trim() ? { notes: notes.trim() } : undefined,
+        status: "draft",
+      });
+
+      await syncGoalDomain(goalId);
+      router.replace(`/goals/${goalId}`);
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Failed to save this goal.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -41,19 +56,26 @@ export default function CreateGoalScreen() {
           <ThemedText style={styles.cancelText}>Cancel</ThemedText>
         </Pressable>
         <ThemedText type="subheading">New Goal</ThemedText>
-        <Pressable onPress={handleCreateGoal} disabled={!title.trim() || !abstractGoal.trim()}>
+        <Pressable
+          onPress={() => void handleCreateGoal()}
+          disabled={isSaving || !title.trim() || !abstractGoal.trim()}
+        >
           <ThemedText
             style={[
               styles.saveText,
-              (!title.trim() || !abstractGoal.trim()) && styles.disabledText,
+              (isSaving || !title.trim() || !abstractGoal.trim()) &&
+                styles.disabledText,
             ]}
           >
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </ThemedText>
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.form}>
+        {saveError ? (
+          <ThemedText style={styles.errorText}>{saveError}</ThemedText>
+        ) : null}
         <View style={styles.fieldGroup}>
           <ThemedText type="subheading">Goal title</ThemedText>
           <TextInput
@@ -116,6 +138,9 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: "#D0D5DD",
+  },
+  errorText: {
+    color: "#B42318",
   },
   form: {
     padding: 16,

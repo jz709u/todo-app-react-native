@@ -12,6 +12,10 @@ const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 describe("planWorkflowService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
     useGoalStore.setState({
       goalsById: {},
       goalOrder: [],
@@ -92,7 +96,7 @@ describe("planWorkflowService", () => {
       approvalState: "approved",
     });
 
-    const approvedPlanId = approveDraftPlanForGoal(goal.id);
+    const approvedPlanId = await approveDraftPlanForGoal(goal.id);
 
     expect(approvedPlanId).toBe(planId);
     expect(usePlanStore.getState().plansById[planId].status).toBe("approved");

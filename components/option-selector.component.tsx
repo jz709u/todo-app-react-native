@@ -46,6 +46,7 @@ export default function OptionSelector<T extends string>({
             <ThemedText
               numberOfLines={1}
               adjustsFontSizeToFit
+              minimumFontScale={0.5}
               style={[
                 styles.buttonText,
                 {

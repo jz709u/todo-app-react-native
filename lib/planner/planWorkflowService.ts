@@ -5,6 +5,7 @@ import {
   getTaskPriorityFromStep,
   getApprovedPlanSteps,
 } from "@/lib/plan-materialization";
+import { getOrCreateDomainUserId, syncGoalDomainGraph } from "@/lib/domainSync";
 import { requestPlanDraft } from "@/lib/planner/planDraftService";
 import {
   createPlan,
@@ -57,10 +58,13 @@ export async function createDraftPlanForGoal(goalId: string) {
 
   updateGoal(goalId, { status: "planning" });
 
+  const userId = await getOrCreateDomainUserId();
+  await syncGoalDomainGraph(goalId, userId);
+
   return planId;
 }
 
-export function approveDraftPlanForGoal(goalId: string) {
+export async function approveDraftPlanForGoal(goalId: string) {
   const goal = getGoalById(goalId);
   if (!goal) {
     throw new Error("Goal not found");
@@ -104,6 +108,9 @@ export function approveDraftPlanForGoal(goalId: string) {
     activePlanId: draftPlan.id,
     status: approvedSteps.length > 0 ? "active" : "draft",
   });
+
+  const userId = await getOrCreateDomainUserId();
+  await syncGoalDomainGraph(goalId, userId);
 
   return draftPlan.id;
 }
