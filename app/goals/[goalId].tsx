@@ -55,7 +55,10 @@ export default function GoalDetailScreen() {
 
   if (!goal) {
     return (
-      <SafeAreaView style={styles.container} edges={["right", "bottom", "left"]}>
+      <SafeAreaView
+        style={styles.container}
+        edges={["right", "bottom", "left"]}
+      >
         <Stack.Screen options={{ title: "Goal" }} />
         <View style={styles.missingState}>
           <ThemedText type="subheading">Goal not found</ThemedText>
@@ -256,9 +259,8 @@ const styles = StyleSheet.create({
     backgroundColor: semanticColors.screenBackground,
   },
   content: {
-    paddingHorizontal: 16,
+    padding: 16,
     gap: 18,
-    paddingBottom: 32,
   },
   heroCard: {
     backgroundColor: "#0F172A",
