@@ -55,7 +55,7 @@ export default function GoalDetailScreen() {
 
   if (!goal) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["right", "bottom", "left"]}>
         <Stack.Screen options={{ title: "Goal" }} />
         <View style={styles.missingState}>
           <ThemedText type="subheading">Goal not found</ThemedText>
@@ -68,7 +68,7 @@ export default function GoalDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["right", "bottom", "left"]}>
       <Stack.Screen options={{ title: goal.title }} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heroCard}>
@@ -92,11 +92,16 @@ export default function GoalDetailScreen() {
         <View style={styles.statsRow}>
           <StatCard label="Plans" value={String(plans.length)} />
           <StatCard label="Steps" value={String(planSteps.length)} />
-          <StatCard label="Done tasks" value={`${completedTaskCount}/${totalTaskCount}`} />
+          <StatCard
+            label="Done tasks"
+            value={`${completedTaskCount}/${totalTaskCount}`}
+          />
         </View>
 
         <Section title="Constraints">
-          {goal.constraints.notes || goal.constraints.budget || goal.constraints.tools?.length ? (
+          {goal.constraints.notes ||
+          goal.constraints.budget ||
+          goal.constraints.tools?.length ? (
             <SectionCard>
               {goal.constraints.notes ? (
                 <ThemedText lightColor={semanticColors.textSubtle}>
@@ -124,7 +129,8 @@ export default function GoalDetailScreen() {
             <SectionCard>
               <ThemedText type="subheading">{activePlan.summary}</ThemedText>
               <ThemedText style={styles.metaRowText}>
-                Version {activePlan.version} · {formatPlanStatus(activePlan.status)}
+                Version {activePlan.version} ·{" "}
+                {formatPlanStatus(activePlan.status)}
               </ThemedText>
               {activePlan.status === "awaiting_approval" ? (
                 <Pressable
@@ -148,7 +154,8 @@ export default function GoalDetailScreen() {
                       <View style={styles.stepCopy}>
                         <ThemedText>{step.title}</ThemedText>
                         <ThemedText style={styles.metaRowText}>
-                          {formatStepStatus(step.status)} · {formatStepApprovalState(step.approvalState)}
+                          {formatStepStatus(step.status)} ·{" "}
+                          {formatStepApprovalState(step.approvalState)}
                         </ThemedText>
                       </View>
                     </View>
@@ -227,7 +234,8 @@ function TaskRow({ task }: { task: Task }) {
       <View style={styles.stepCopy}>
         <ThemedText>{task.title}</ThemedText>
         <ThemedText style={styles.metaRowText}>
-          {formatTaskStatus(task.status)} · {formatTaskPriority(task.priority)} priority
+          {formatTaskStatus(task.status)} · {formatTaskPriority(task.priority)}{" "}
+          priority
         </ThemedText>
       </View>
     </View>
@@ -248,7 +256,7 @@ const styles = StyleSheet.create({
     backgroundColor: semanticColors.screenBackground,
   },
   content: {
-    padding: 16,
+    paddingHorizontal: 16,
     gap: 18,
     paddingBottom: 32,
   },
